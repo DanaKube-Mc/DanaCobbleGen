@@ -1,0 +1,46 @@
+/**
+ * CustomCobbleGen By @author Philip Flyvholm
+ * IslandLevelHook.java
+ */
+package fr.danakube.danacobblegen.Hooks;
+
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+
+import java.util.UUID;
+
+/**
+ * @author Philip
+ *
+ */
+public interface IslandHook {
+
+	void init();
+
+	String pluginHookName();
+
+	String getHookName();
+	
+	boolean isPlayerLeader(UUID uuid);
+	
+	UUID getIslandLeaderFromPlayer(UUID uuid);
+	
+	int getIslandLevel(UUID uuid);
+	
+	boolean hasIsland(UUID uuid);
+	
+	Player[] getArrayOfIslandMembers(UUID uuid);
+	
+	void sendMessageToIslandMembers(String message, UUID uuid);
+	
+	void sendMessageToIslandMembers(String message, UUID uuid, boolean withoutSender);
+	
+	double getBalance(UUID uuid);
+	
+	void removeFromBalance(UUID uuid, double amount);
+	boolean supportsIslandBalance();
+	
+	void onGeneratorBlockBreak(UUID uuid, Block block);
+	void onGeneratorGenerate(UUID uuid, Block block);
+	
+}
