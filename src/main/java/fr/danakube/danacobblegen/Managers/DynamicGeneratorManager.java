@@ -88,7 +88,7 @@ public class DynamicGeneratorManager {
                 }
             }
 
-            Map<String, DynamicOre> oresMap = new HashMap<>();
+            Map<String, DynamicOre> oresMap = new LinkedHashMap<>();
             ConfigurationSection oresSec = modeSec.getConfigurationSection("ores");
             if (oresSec != null) {
                 for (String oreId : oresSec.getKeys(false)) {
@@ -107,6 +107,8 @@ public class DynamicGeneratorManager {
                         }
                     }
 
+                    int slot = oreSec.getInt("slot", -1);
+
                     double startPercentage = oreSec.getDouble("unlock.start-percentage", 1.0);
                     List<Requirement> unlockReqs = parseRequirements(oreSec.getConfigurationSection("unlock"));
 
@@ -124,7 +126,7 @@ public class DynamicGeneratorManager {
                         }
                     }
 
-                    DynamicOre ore = new DynamicOre(oreId, displayName, iconItem, modeId, unlockReqs, startPercentage, upgrades);
+                    DynamicOre ore = new DynamicOre(oreId, displayName, iconItem, slot, modeId, unlockReqs, startPercentage, upgrades);
                     oresMap.put(oreId, ore);
                 }
             }

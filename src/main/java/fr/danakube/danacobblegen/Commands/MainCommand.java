@@ -189,6 +189,49 @@ public class MainCommand implements CommandExecutor{
 					newDatabase.saveEverythingToDatabase();
 					sender.sendMessage(Lang.DATABASE_MIGRATE_SAVING_DONE.toString(newType));
 				}
+			}else if(args[1].equalsIgnoreCase("setlevel") || args[1].equalsIgnoreCase("addlevel") || args[1].equalsIgnoreCase("removelevel")) {
+				if(!pm.hasPermission(sender, "customcobblegen.admin.level", true)) return false;
+				if(args.length < 6) {
+					sender.sendMessage(Lang.PREFIX.toString() + Lang.ADMIN_LEVEL_USAGE.toString().replace("%command%", args[1].toLowerCase()));
+					return true;
+				}
+				org.bukkit.entity.Player target = org.bukkit.Bukkit.getPlayer(args[2]);
+				if(target == null) {
+					sender.sendMessage(Lang.PREFIX.toString() + Lang.ADMIN_LEVEL_PLAYER_NOT_FOUND.toString());
+					return true;
+				}
+				int modeId;
+				int amount;
+				try {
+					modeId = Integer.parseInt(args[3]);
+					amount = Integer.parseInt(args[5]);
+				} catch(NumberFormatException e) {
+					sender.sendMessage(Lang.PREFIX.toString() + Lang.ADMIN_LEVEL_INVALID_NUMBER.toString());
+					return true;
+				}
+				String oreId = args[4].toUpperCase();
+				
+				fr.danakube.danacobblegen.databases.PlayerData data = plugin.getPlayerDatabase().getPlayerData(target.getUniqueId());
+				if (data == null) {
+					sender.sendMessage(Lang.PREFIX.toString() + Lang.ADMIN_LEVEL_DATA_NOT_FOUND.toString());
+					return true;
+				}
+				
+				int currentLevel = data.getOreLevel(modeId, oreId);
+				int newLevel = currentLevel;
+				
+				if(args[1].equalsIgnoreCase("setlevel")) newLevel = amount;
+				else if(args[1].equalsIgnoreCase("addlevel")) newLevel += amount;
+				else if(args[1].equalsIgnoreCase("removelevel")) newLevel -= amount;
+				
+				if(newLevel < -1) newLevel = -1; // -1 = locked
+				
+				data.setOreLevel(modeId, oreId, newLevel);
+				sender.sendMessage(Lang.PREFIX.toString() + Lang.ADMIN_LEVEL_SUCCESS.toString()
+						.replace("%player%", target.getName())
+						.replace("%oreId%", oreId)
+						.replace("%modeId%", String.valueOf(modeId))
+						.replace("%level%", String.valueOf(newLevel)));
 			}else {
 				if(!pm.hasPermission(sender, "customcobblegen.admin", true)) return false;
 				sender.sendMessage(adminUsage);

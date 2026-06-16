@@ -185,7 +185,12 @@ public enum Lang {
     DATABASE_MIGRATE_LOADING_DONE("database.migrate.loading.done", "&aDatabase &l%s1&a loaded. Continuing migration..."),
     DATABASE_MIGRATE_ESTABLISHING_CONNECTION("database.migrate.establishing-connection", "&aEstablishing connection to new &l%s1&a database"),
     DATABASE_MIGRATE_SAVING_START("database.migrate.saving.start", "&aStarting saving data to &l%s1&a database"),
-    DATABASE_MIGRATE_SAVING_DONE("database.migrate.saving.done", "&a&lSuccessful migration to %s1 database");
+    DATABASE_MIGRATE_SAVING_DONE("database.migrate.saving.done", "&a&lSuccessful migration to %s1 database"),
+    ADMIN_LEVEL_USAGE("admin.level.usage", "&cUsage: /ccg admin %command% <player> <modeId> <oreId> <amount>"),
+    ADMIN_LEVEL_PLAYER_NOT_FOUND("admin.level.player-not-found", "&cPlayer not found or offline."),
+    ADMIN_LEVEL_INVALID_NUMBER("admin.level.invalid-number", "&cModeId and amount must be numbers."),
+    ADMIN_LEVEL_DATA_NOT_FOUND("admin.level.data-not-found", "&cPlayer data not found."),
+    ADMIN_LEVEL_SUCCESS("admin.level.success", "&aSuccessfully changed ore level of %player% for %oreId% (Mode: %modeId%) to %level%");
 
 
     private final String path;

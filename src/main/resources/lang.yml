@@ -226,3 +226,8 @@ database.migrate.loading.done: "&aDatabase &l%s1&a loaded. Continuing migration.
 database.migrate.establishing-connection: "&aEstablishing connection to new &l%s1&a database"
 database.migrate.saving.start: "&aStarting saving data to &l%s1&a database"
 database.migrate.saving.done: "&a&lSuccessful migration to %s1 database"
+admin.level.usage: "&cUsage: /ccg admin %command% <player> <modeId> <oreId> <amount>"
+admin.level.player-not-found: "&cPlayer not found or offline."
+admin.level.invalid-number: "&cModeId and amount must be numbers."
+admin.level.data-not-found: "&cPlayer data not found."
+admin.level.success: "&aSuccessfully changed ore level of %player% for %oreId% (Mode: %modeId%) to %level%"

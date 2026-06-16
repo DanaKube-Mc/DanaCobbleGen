@@ -11,14 +11,16 @@ public class DynamicOre {
     private final String displayName;
     private final ItemStack iconItem;
     private final int supportedGenerationMode;
+    private final int slot;
     private final List<Requirement> unlockRequirements;
     private final double startPercentage;
     private final Map<Integer, OreUpgrade> upgrades;
 
-    public DynamicOre(String id, String displayName, ItemStack iconItem, int supportedGenerationMode, List<Requirement> unlockRequirements, double startPercentage, Map<Integer, OreUpgrade> upgrades) {
+    public DynamicOre(String id, String displayName, ItemStack iconItem, int slot, int supportedGenerationMode, List<Requirement> unlockRequirements, double startPercentage, Map<Integer, OreUpgrade> upgrades) {
         this.id = id;
         this.displayName = displayName;
         this.iconItem = iconItem;
+        this.slot = slot;
         this.supportedGenerationMode = supportedGenerationMode;
         this.unlockRequirements = unlockRequirements;
         this.startPercentage = startPercentage;
@@ -39,6 +41,10 @@ public class DynamicOre {
 
     public int getSupportedGenerationMode() {
         return supportedGenerationMode;
+    }
+
+    public int getSlot() {
+        return slot;
     }
 
     public List<Requirement> getUnlockRequirements() {

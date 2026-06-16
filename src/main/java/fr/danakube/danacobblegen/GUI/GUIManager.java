@@ -52,11 +52,26 @@ public class GUIManager {
 				oreSlots = Arrays.asList(10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25);
 			}
 
+			List<Integer> availableSlots = new ArrayList<>(oreSlots);
+			
+			// Remove slots that are forcefully requested
+			for (DynamicOre ore : modeOres.values()) {
+				if (ore.getSlot() >= 0) {
+					availableSlots.remove(Integer.valueOf(ore.getSlot()));
+				}
+			}
+
 			int currentSlotIndex = 0;
 			
 			for (DynamicOre ore : modeOres.values()) {
-				if (currentSlotIndex >= oreSlots.size()) break; // No more slots available
-				int slot = oreSlots.get(currentSlotIndex);
+				int slot;
+				if (ore.getSlot() >= 0) {
+					slot = ore.getSlot();
+				} else {
+					if (currentSlotIndex >= availableSlots.size()) break; // No more slots available
+					slot = availableSlots.get(currentSlotIndex);
+					currentSlotIndex++;
+				}
 
 				int level = plugin.getPlayerDatabase().getPlayerData(p.getUniqueId()).getOreLevel(modeId, ore.getId());
 				ItemStack item = ore.getIconItem();
