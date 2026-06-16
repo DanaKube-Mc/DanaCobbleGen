@@ -1,6 +1,7 @@
 package fr.danakube.danacobblegen.API;
 
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import fr.danakube.danacobblegen.Requirements.Requirement;
 import java.util.List;
 import java.util.Map;
@@ -8,16 +9,16 @@ import java.util.Map;
 public class DynamicOre {
     private final String id;
     private final String displayName;
-    private final Material icon;
+    private final ItemStack iconItem;
     private final int supportedGenerationMode;
     private final List<Requirement> unlockRequirements;
     private final double startPercentage;
     private final Map<Integer, OreUpgrade> upgrades;
 
-    public DynamicOre(String id, String displayName, Material icon, int supportedGenerationMode, List<Requirement> unlockRequirements, double startPercentage, Map<Integer, OreUpgrade> upgrades) {
+    public DynamicOre(String id, String displayName, ItemStack iconItem, int supportedGenerationMode, List<Requirement> unlockRequirements, double startPercentage, Map<Integer, OreUpgrade> upgrades) {
         this.id = id;
         this.displayName = displayName;
-        this.icon = icon;
+        this.iconItem = iconItem;
         this.supportedGenerationMode = supportedGenerationMode;
         this.unlockRequirements = unlockRequirements;
         this.startPercentage = startPercentage;
@@ -32,8 +33,8 @@ public class DynamicOre {
         return displayName;
     }
 
-    public Material getIcon() {
-        return icon;
+    public ItemStack getIconItem() {
+        return iconItem.clone();
     }
 
     public int getSupportedGenerationMode() {

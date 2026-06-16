@@ -17,7 +17,8 @@ main-menu:
   stats-item:
     enabled: true
     slot: 4
-    material: "BOOK"
+    material: "PLAYER_HEAD"
+    skin: "2c6e24df498ba4a589c259d9fc0d3db348f93cdf26a5fe461571c1da706efaf3"
     name: "&6Generator Stats"
     lore:
       - " "

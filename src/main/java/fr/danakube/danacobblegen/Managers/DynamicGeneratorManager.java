@@ -9,7 +9,10 @@ import fr.danakube.danacobblegen.databases.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitScheduler;
+import com.cryptomorin.xseries.profiles.builder.XSkull;
+import com.cryptomorin.xseries.profiles.objects.Profileable;
 import java.util.*;
 
 public class DynamicGeneratorManager {
@@ -93,8 +96,16 @@ public class DynamicGeneratorManager {
                     if (oreSec == null) continue;
 
                     String displayName = oreSec.getString("displayName", oreId);
-                    Material icon = Material.matchMaterial(oreSec.getString("icon", "STONE").toUpperCase());
-                    if (icon == null) icon = Material.STONE;
+                    Material iconMaterial = Material.matchMaterial(oreSec.getString("icon", "STONE").toUpperCase());
+                    if (iconMaterial == null) iconMaterial = Material.STONE;
+                    
+                    ItemStack iconItem = new ItemStack(iconMaterial);
+                    if (iconMaterial == Material.PLAYER_HEAD) {
+                        String skullTexture = oreSec.getString("skull", oreSec.getString("SkinURL", null));
+                        if (skullTexture != null && !skullTexture.isEmpty()) {
+                            iconItem = XSkull.createItem().profile(Profileable.detect(skullTexture)).apply();
+                        }
+                    }
 
                     double startPercentage = oreSec.getDouble("unlock.start-percentage", 1.0);
                     List<Requirement> unlockReqs = parseRequirements(oreSec.getConfigurationSection("unlock"));
@@ -113,7 +124,7 @@ public class DynamicGeneratorManager {
                         }
                     }
 
-                    DynamicOre ore = new DynamicOre(oreId, displayName, icon, modeId, unlockReqs, startPercentage, upgrades);
+                    DynamicOre ore = new DynamicOre(oreId, displayName, iconItem, modeId, unlockReqs, startPercentage, upgrades);
                     oresMap.put(oreId, ore);
                 }
             }

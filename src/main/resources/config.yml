@@ -132,3 +132,19 @@ dynamic-generator:
           '2':
             percentage: 3.0
             money: 75000
+      GOLD_ORE:
+        displayName: "&6Gold Ore"
+        icon: "PLAYER_HEAD"
+        skull: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzEwNzdlODcxZDkxYjdmZWEyNGIxZjY4MDhlMDg4ZDdiODQyZGE1MTZmNjM1NmNlOTE2MTM0OTQ0MzFhZThhMCJ9fX0="
+        # Level 0 -> Unlock
+        unlock:
+          start-percentage: 1.0
+          money: 35000
+        # Subsequent Levels
+        upgrades:
+          '1':
+            percentage: 2.0
+            money: 50000
+          '2':
+            percentage: 3.0
+            money: 75000

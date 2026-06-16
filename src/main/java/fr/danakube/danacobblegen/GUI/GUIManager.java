@@ -59,7 +59,7 @@ public class GUIManager {
 				int slot = oreSlots.get(currentSlotIndex);
 
 				int level = plugin.getPlayerDatabase().getPlayerData(p.getUniqueId()).getOreLevel(modeId, ore.getId());
-				ItemStack item = new ItemStack(ore.getIcon());
+				ItemStack item = ore.getIconItem();
 				ItemMeta meta = item.getItemMeta();
 				meta.setDisplayName(Lang.color(ore.getDisplayName()));
 
@@ -182,6 +182,12 @@ public class GUIManager {
 				int statsSlot = guiConfig.getInt("main-menu.stats-item.slot", 4);
 				Material statsMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.stats-item.material", "BOOK")).orElse(XMaterial.BOOK).parseMaterial();
 				ItemStack statsItem = new ItemStack(statsMat != null ? statsMat : Material.BOOK);
+				if (statsMat == Material.PLAYER_HEAD) {
+					String skullTexture = guiConfig.getString("main-menu.stats-item.skin", guiConfig.getString("main-menu.stats-item.skull", null));
+					if (skullTexture != null && !skullTexture.isEmpty()) {
+						statsItem = com.cryptomorin.xseries.profiles.builder.XSkull.createItem().profile(com.cryptomorin.xseries.profiles.objects.Profileable.detect(skullTexture)).apply();
+					}
+				}
 				ItemMeta statsMeta = statsItem.getItemMeta();
 				statsMeta.setDisplayName(Lang.color(guiConfig.getString("main-menu.stats-item.name", "&6Generator Stats")));
 				
@@ -210,7 +216,22 @@ public class GUIManager {
 			if (guiConfig.getBoolean("main-menu.filler.enabled", true)) {
 				Material fillerMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.filler.material", "GRAY_STAINED_GLASS_PANE")).orElse(XMaterial.GRAY_STAINED_GLASS_PANE).parseMaterial();
 				String fillerName = Lang.color(guiConfig.getString("main-menu.filler.name", " "));
-				ItemStack backgroundItem = new ItemLib(fillerMat != null ? fillerMat : Material.STONE, 1, (short) 7, fillerName).create();
+				ItemStack backgroundItem;
+				if (fillerMat == Material.PLAYER_HEAD) {
+					String skullTexture = guiConfig.getString("main-menu.filler.skin", guiConfig.getString("main-menu.filler.skull", null));
+					if (skullTexture != null && !skullTexture.isEmpty()) {
+						backgroundItem = com.cryptomorin.xseries.profiles.builder.XSkull.createItem().profile(com.cryptomorin.xseries.profiles.objects.Profileable.detect(skullTexture)).apply();
+						ItemMeta bm = backgroundItem.getItemMeta();
+						if (bm != null) {
+							bm.setDisplayName(fillerName);
+							backgroundItem.setItemMeta(bm);
+						}
+					} else {
+						backgroundItem = new ItemLib(Material.PLAYER_HEAD, 1, (short) 3, fillerName).create();
+					}
+				} else {
+					backgroundItem = new ItemLib(fillerMat != null ? fillerMat : Material.STONE, 1, (short) 7, fillerName).create();
+				}
 				List<Integer> fillerSlots = guiConfig.getIntegerList("main-menu.filler.slots");
 				for (int i : fillerSlots) {
 					if (i >= 0 && i < guiSize && ch.getIcon(i) == null) {
