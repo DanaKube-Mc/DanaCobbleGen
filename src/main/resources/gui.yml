@@ -20,6 +20,7 @@ main-menu:
     material: "PLAYER_HEAD"
     skin: "2c6e24df498ba4a589c259d9fc0d3db348f93cdf26a5fe461571c1da706efaf3"
     name: "&6Generator Stats"
+    rates-format: "&e - %material%: %percentage%%" # Customize how %rates% is displayed
     lore:
       - " "
       - "&7Current Generation Rates:"

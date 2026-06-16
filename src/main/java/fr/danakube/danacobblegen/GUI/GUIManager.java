@@ -87,11 +87,7 @@ public class GUIManager {
 					rawLore = guiConfig.getStringList("main-menu.ores.locked.lore");
 					List<String> requirementsLines = new ArrayList<>();
 					for (Requirement r : ore.getUnlockRequirements()) {
-						if (r.getRequirementType() == RequirementType.MONEY) {
-							requirementsLines.add(Lang.color("&e$ " + r.getRequirementValue()));
-						} else if (r.getRequirementType() == RequirementType.XP) {
-							requirementsLines.add(Lang.color("&a" + r.getRequirementValue() + " XP Levels"));
-						}
+						requirementsLines.add(String.valueOf(r.getRequirementValue()));
 					}
 
 					for (String line : rawLore) {
@@ -148,11 +144,7 @@ public class GUIManager {
 						rawLore = guiConfig.getStringList("main-menu.ores.unlocked.lore");
 						List<String> requirementsLines = new ArrayList<>();
 						for (Requirement r : nextUpgrade.getRequirements()) {
-							if (r.getRequirementType() == RequirementType.MONEY) {
-								requirementsLines.add(Lang.color("&e$ " + r.getRequirementValue()));
-							} else if (r.getRequirementType() == RequirementType.XP) {
-								requirementsLines.add(Lang.color("&a" + r.getRequirementValue() + " XP Levels"));
-							}
+							requirementsLines.add(String.valueOf(r.getRequirementValue()));
 						}
 
 						for (String line : rawLore) {
@@ -210,9 +202,13 @@ public class GUIManager {
 				List<String> finalStatsLore = new ArrayList<>();
 				Map<Material, Double> rates = dgm.getRatesForPlayer(p.getUniqueId(), modeId);
 				
+				String rateFormat = guiConfig.getString("main-menu.stats-item.rates-format", "&e - %material%: %percentage%%");
 				List<String> ratesLines = new ArrayList<>();
 				for (Map.Entry<Material, Double> entry : rates.entrySet()) {
-					ratesLines.add(ChatColor.YELLOW + " - " + entry.getKey().name() + ": " + String.format(Locale.US, "%.2f", entry.getValue()) + "%");
+					String line = rateFormat
+							.replace("%material%", entry.getKey().name())
+							.replace("%percentage%", String.format(Locale.US, "%.2f", entry.getValue()));
+					ratesLines.add(Lang.color(line));
 				}
 
 				for (String line : rawStatsLore) {
