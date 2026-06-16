@@ -7,13 +7,12 @@ package fr.danakube.danacobblegen.Events;
 import com.cryptomorin.xseries.XMaterial;
 import fr.danakube.danacobblegen.API.GeneratorGenerateEvent;
 import fr.danakube.danacobblegen.API.PlayerBreakGeneratedBlock;
-import fr.danakube.danacobblegen.API.Tier;
+
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Files.Setting;
 import fr.danakube.danacobblegen.Managers.*;
-import fr.danakube.danacobblegen.Signs.*;
-import fr.danakube.danacobblegen.Utils.SelectedTiers;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -35,11 +34,9 @@ import java.util.Map.Entry;
 
 public class BlockEvents implements Listener{
 
-	private final TierManager tm = TierManager.getInstance();
+	private final DynamicGeneratorManager dgm = DynamicGeneratorManager.getInstance();
 	private final BlockManager bm = BlockManager.getInstance();
 	private final CustomCobbleGen plugin = CustomCobbleGen.getInstance();
-	private final SignManager signManager = SignManager.getInstance();
-	private final PermissionManager pm = new PermissionManager();
 	private final GeneratorModeManager genModeManager = GeneratorModeManager.getInstance();
 
 	@EventHandler
@@ -95,12 +92,6 @@ public class BlockEvents implements Listener{
 						}
 						
 						UUID uuid = gb.getUUID(); //Get the uuid of the player who broke the blocks tier
-						SelectedTiers selectedTiers = tm.getSelectedTiers(uuid); // ^
-						if(selectedTiers == null) return;
-
-						Tier tier = selectedTiers.getSelectedTiersMap().get(mode);
-
-						if(tier == null) tier = selectedTiers.getSelectedTiersMap().get(genModeManager.getUniversalGenMode());
 
 						if(!mode.canGenerateWhileRaining() && toBlock.getWorld().hasStorm()) {
 							e.setCancelled(true);
@@ -110,20 +101,15 @@ public class BlockEvents implements Listener{
 
 						float soundVolume = Setting.SOUND_VOLUME.getFloat();
 						float pitch = Setting.SOUND_PITCH.getFloat();
-						Material result = null;
-						if(tier != null){
-							result = tier.getRandomResult();
-						}
-						else if (mode.hasFallBackMaterial()){
-							result = mode.getFallbackMaterial();
-						}
+						Material result = dgm.getRandomResult(uuid, mode.getId());
+						if (result == null && mode.hasFallBackMaterial()) result = mode.getFallbackMaterial();
 
-						GeneratorGenerateEvent event = new GeneratorGenerateEvent(mode, tier, result, uuid, toBlock.getLocation());
+						GeneratorGenerateEvent event = new GeneratorGenerateEvent(mode, result, uuid, toBlock.getLocation());
 						Bukkit.getPluginManager().callEvent(event);
 						if(event.isCancelled()) return;
 						e.setCancelled(true);
 						if(event.getResult() == null) {
-							plugin.error("&cUnknown material in " + event.getTierUsed().getName() + " tier.", true);
+							plugin.error("&cUnknown material generated.", true);
 							return;
 						}
 						event.getGenerationLocation().getBlock().setType(event.getResult()); //Get a random material and replace the block
@@ -172,98 +158,6 @@ public class BlockEvents implements Listener{
 	}
 	
 	@EventHandler
-	public void onSignChange(SignChangeEvent e) {
-		if(signManager.areSignsDisabled()) return;
-		Location l = e.getBlock().getLocation();
-		if(l.getWorld() == null || isWorldDisabled(l.getWorld())) return;
-		Player p = e.getPlayer();
-		String[] lines = e.getLines();
-		if(!lines[0].equalsIgnoreCase("[CCG]")) return;
-		ClickableSign sign = null;
-		boolean noPermission = false;
-		if(lines[1].equalsIgnoreCase("GUI")) {
-			if(pm.hasPermission(e.getPlayer(), "customcobblegen.signs.create.gui", true)) {
-				sign = new GUISign(l);
-				e.setLine(0, Lang.SIGN_GUI_0.toString());
-				e.setLine(1, Lang.SIGN_GUI_1.toString());
-				e.setLine(2, Lang.SIGN_GUI_2.toString());
-				e.setLine(3, Lang.SIGN_GUI_3.toString());	
-			} else {
-				noPermission = true;
-			}
-		}else if(lines[1].equalsIgnoreCase("select")){
-			if(pm.hasPermission(e.getPlayer(), "customcobblegen.signs.create.select", true)) {
-				if(lines[2] == null) {
-					p.sendMessage(Lang.PREFIX.toString() + Lang.UNDIFINED_CLASS);
-				}else if(lines[3] == null || !lines[3].matches("-?\\d+")) {
-					p.sendMessage(Lang.PREFIX.toString() + Lang.UNDIFINED_LEVEL);
-				}else {
-					String tierClass = lines[2];
-					int tierLevel = Integer.parseInt(lines[3]);
-					Tier tier = tm.getTierByLevel(tierClass, tierLevel);
-					sign = new SelectSign(l, tier);
-					if(sign.validateData()) {
-		
-						e.setLine(0, Lang.SIGN_SELECT_0.toString(tier));
-						e.setLine(1, Lang.SIGN_SELECT_1.toString(tier));
-						e.setLine(2, Lang.SIGN_SELECT_2.toString(tier));
-						e.setLine(3, Lang.SIGN_SELECT_3.toString(tier));
-					}else {
-						p.sendMessage(Lang.TIER_NOT_FOUND.toString());
-						sign = null;
-					}
-				}
-			} else {
-				noPermission = true;
-			}
-			
-		}else if(lines[1].equalsIgnoreCase("buy")){
-			if(pm.hasPermission(e.getPlayer(), "customcobblegen.signs.create.buy", true)) {
-				if(lines[2] == null) {
-					p.sendMessage(Lang.PREFIX.toString() + Lang.UNDIFINED_CLASS);
-				}else if(lines[3] == null || !lines[3].matches("-?\\d+")) {
-					p.sendMessage(Lang.PREFIX.toString() + Lang.UNDIFINED_LEVEL);
-				}else {
-					String tierClass = lines[2];
-					int tierLevel = Integer.parseInt(lines[3]);
-					Tier tier = tm.getTierByLevel(tierClass, tierLevel);
-					sign = new BuySign(l, tier);
-					if(sign.validateData()) {
-		
-						e.setLine(0, Lang.SIGN_BUY_0.toString(tier));
-						e.setLine(1, Lang.SIGN_BUY_1.toString(tier));
-						e.setLine(2, Lang.SIGN_BUY_2.toString(tier));
-						e.setLine(3, Lang.SIGN_BUY_3.toString(tier));
-					}else {
-						p.sendMessage(Lang.TIER_NOT_FOUND.toString());
-						sign = null;
-					}
-				}
-			} else {
-				noPermission = true;
-			}
-			
-		}
-
-		if(sign == null) {
-			if(noPermission) {
-				e.setLine(0, Lang.SIGN_NO_PERMISSION_0.toString());
-				e.setLine(1, Lang.SIGN_NO_PERMISSION_1.toString());
-				e.setLine(2, Lang.SIGN_NO_PERMISSION_2.toString());
-				e.setLine(3, Lang.SIGN_NO_PERMISSION_3.toString());
-			}else {
-				e.setLine(0, Lang.SIGN_NOT_VALID_0.toString());
-				e.setLine(1, Lang.SIGN_NOT_VALID_1.toString());
-				e.setLine(2, Lang.SIGN_NOT_VALID_2.toString());
-				e.setLine(3, Lang.SIGN_NOT_VALID_3.toString());
-			}
-			return;
-		}
-		
-		signManager.addSign(sign);
-		p.sendMessage(Lang.PREFIX.toString() + Lang.SIGN_SUCCESS);
-	}
-	@EventHandler
 	public void onPistonPush(BlockPistonExtendEvent e) {
 		if(isWorldDisabled(e.getBlock().getWorld())) return;
 		if(!Setting.AUTOMATION_PISTONS.getBoolean()) return;
@@ -295,27 +189,7 @@ public class BlockEvents implements Listener{
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent e) {
 		Location l = e.getBlock().getLocation();
-		ClickableSign signAtLocation = signManager.getSignFromLocation(l);
 		Player p = e.getPlayer();
-		if(signAtLocation != null) {
-			if(pm.hasPermission(e.getPlayer(), "customcobblegen.signs.create." + signAtLocation.getSignType().name().toLowerCase(), true)) {
-				if(signManager.removeSign(signAtLocation)) {
-					p.sendMessage(Lang.PREFIX.toString() + Lang.SIGN_DELETED);
-					return;
-				}
-			}else {
-				e.setCancelled(true);
-				return;
-			}
-		}else {
-			l.setY(l.getY()+1);
-			signAtLocation = signManager.getSignFromLocation(l);
-			if(signAtLocation != null) {
-				e.setCancelled(true);
-				return;
-			}
-			l.setY(l.getY()-1);
-		}
 
 		if(bm.getKnownGenPistons().containsKey(l)) {
 			bm.getKnownGenPistons().remove(l);

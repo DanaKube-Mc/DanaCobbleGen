@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen.Requirements;
 
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Files.Setting;
@@ -43,14 +42,14 @@ public class MoneyRequirement implements Requirement{
 	}
 
 	@Override
-	public List<String> addAvailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_MONEY_AFFORD.toString(tier));
+	public List<String> addAvailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_MONEY_AFFORD.toString());
 		return lore;
 	}
 
 	@Override
-	public List<String> addUnavailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_MONEY_EXPENSIVE.toString(tier));
+	public List<String> addUnavailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_MONEY_EXPENSIVE.toString());
 		return lore;
 	}
 

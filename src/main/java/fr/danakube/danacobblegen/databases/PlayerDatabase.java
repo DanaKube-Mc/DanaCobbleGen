@@ -6,7 +6,6 @@ package fr.danakube.danacobblegen.databases;
 
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Managers.BlockManager;
-import fr.danakube.danacobblegen.Managers.TierManager;
 import fr.danakube.danacobblegen.Utils.Response;
 
 import java.util.HashMap;
@@ -21,13 +20,10 @@ public abstract class PlayerDatabase {
     protected CustomCobbleGen plugin;
     protected Map<UUID, PlayerData> playerData;
     protected BlockManager blockManager;
-    protected TierManager tierManager;
-
     public PlayerDatabase() {
         playerData = new HashMap<>();
         plugin = CustomCobbleGen.getInstance();
         blockManager = BlockManager.getInstance();
-        tierManager = TierManager.getInstance();
     }
 
     public abstract Response<String> establishConnection();

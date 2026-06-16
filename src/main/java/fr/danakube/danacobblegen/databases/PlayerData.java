@@ -1,102 +1,60 @@
-/**
- * CustomCobbleGen By @author Philip Flyvholm
- * PlayerData.java
- */
 package fr.danakube.danacobblegen.databases;
 
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.CustomCobbleGen;
-import fr.danakube.danacobblegen.Managers.TierManager;
-import fr.danakube.danacobblegen.Utils.SelectedTiers;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-/**
- * @author Philip
- *
- */
 public class PlayerData {
 
 	private final CustomCobbleGen plugin = CustomCobbleGen.getInstance();
 	
 	private UUID uuid;
-	private SelectedTiers selectedTiers;
-	private List<Tier> purchasedTiers;
+	// modeId -> (oreId -> level)
+	private Map<Integer, Map<String, Integer>> unlockedOres;
 	
-	
-	public PlayerData(UUID uuid, SelectedTiers selectedTiers, List<Tier> purchasedTiers) {
+	public PlayerData(UUID uuid, Map<Integer, Map<String, Integer>> unlockedOres) {
 		if(uuid == null) {
 			plugin.error("Failed to load player data: uuid is null");
 			return;
 		}
-		if(selectedTiers == null) {
-			plugin.error("Failed to load player data: selectedTiers is null for uuid " + uuid);
-			return;
-		}
-		if(purchasedTiers == null) {
-			plugin.error("Failed to load player data: purchasedTiers is null for uuid " + uuid);
+		if(unlockedOres == null) {
+			plugin.error("Failed to load player data: unlockedOres is null for uuid " + uuid);
 			return;
 		}
 		this.uuid = uuid;
-		this.selectedTiers = selectedTiers;
-		this.purchasedTiers = purchasedTiers;
+		this.unlockedOres = unlockedOres;
 	}
 	
-	
-	
 	public PlayerData(UUID uuid) {
-		this(uuid, new SelectedTiers(uuid, new ArrayList<>()), new ArrayList<>());
-		selectedTiers.addTier(TierManager.getInstance().getTierByLevel("DEFAULT", 0));
+		this(uuid, new HashMap<>());
 	}
 
 	public UUID getUUID() {
 		return uuid;
 	}
 
-	public SelectedTiers getSelectedTiers() {
-		return selectedTiers;
+	public Map<Integer, Map<String, Integer>> getUnlockedOres() {
+		return unlockedOres;
 	}
 
-	public void setSelectedTiers(SelectedTiers selectedTiers) {
-		this.selectedTiers = selectedTiers;
-	}
-	
-	public List<Tier> getPurchasedTiers() {
-		return purchasedTiers;
+	public void setUnlockedOres(Map<Integer, Map<String, Integer>> unlockedOres) {
+		this.unlockedOres = unlockedOres;
 	}
 
-	public void setPurchasedTiers(List<Tier> purchasedTiers) {
-		this.purchasedTiers = purchasedTiers;
+	public Map<String, Integer> getOresForMode(int modeId) {
+		return unlockedOres.getOrDefault(modeId, new HashMap<>());
 	}
 
-	public void addSelectedTiers(Tier tier) {
-		if(this.isTierSelected(tier)) return;
-		this.getSelectedTiers().addTier(tier);
+	public void setOreLevel(int modeId, String oreId, int level) {
+		unlockedOres.computeIfAbsent(modeId, k -> new HashMap<>()).put(oreId, level);
 	}
-	
-	public void removeSelectedTiers(Tier tier) {
-		if(!this.isTierSelected(tier)) return;
-		this.getSelectedTiers().removeTier(tier);
+
+	public int getOreLevel(int modeId, String oreId) {
+		return getOresForMode(modeId).getOrDefault(oreId, -1); // -1 means locked
 	}
-	
-	public boolean isTierSelected(Tier tier) {
-		return this.getSelectedTiers().isTierSelected(tier);
+
+	public boolean isOreUnlocked(int modeId, String oreId) {
+		return getOreLevel(modeId, oreId) >= 0;
 	}
-	
-	public void addPurchasedTier(Tier tier) {
-		if(this.isTierPurchased(tier)) return;
-		this.getPurchasedTiers().add(tier);
-	}
-	
-	public void removePurchasedTier(Tier tier) {
-		if(!this.isTierPurchased(tier)) return;
-		this.getPurchasedTiers().remove(tier);
-	}
-	
-	public boolean isTierPurchased(Tier tier) {
-		return this.getPurchasedTiers() != null && !this.getPurchasedTiers().isEmpty() && this.getPurchasedTiers().contains(tier);
-	}
-	
 }

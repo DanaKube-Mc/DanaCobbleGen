@@ -1,9 +1,7 @@
 package fr.danakube.danacobblegen.Requirements;
 
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.Files.Lang;
 import org.bukkit.entity.Player;
-
 import java.util.List;
 
 public class XpRequirement implements Requirement{
@@ -31,14 +29,14 @@ public class XpRequirement implements Requirement{
 	}
 
 	@Override
-	public List<String> addAvailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_XP_AFFORD.toString(tier));
+	public List<String> addAvailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_XP_AFFORD.toString());
 		return lore;
 	}
 
 	@Override
-	public List<String> addUnavailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_XP_EXPENSIVE.toString(tier));
+	public List<String> addUnavailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_XP_EXPENSIVE.toString());
 		return lore;
 	}
 
