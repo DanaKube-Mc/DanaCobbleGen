@@ -27,6 +27,12 @@ When customizing your `gui.yml`, you can use the following local placeholders in
 - `%requirements%` : Automatically formats and displays the cost (Money, XP, etc.) required to unlock or upgrade an ore based on your `lang.yml`.
 - `%rates%` : Automatically lists all the active spawn rates for the generator.
 
+### Commands & Permissions:
+- `/ccg admin setlevel <player> <modeId> <oreId> <amount>` : Force a player's ore level to a specific amount. *(Permission: `customcobblegen.admin.level`)*
+- `/ccg admin addlevel <player> <modeId> <oreId> <amount>` : Add levels to a player's ore. *(Permission: `customcobblegen.admin.level`)*
+- `/ccg admin removelevel <player> <modeId> <oreId> <amount>` : Remove levels from a player's ore. *(Permission: `customcobblegen.admin.level`)*
+*(Note: A level of `-1` means the ore is locked, `0` means unlocked but not upgraded)*
+
 ### Requirements:
 - If you want to use money as a payment, then you need to have **Vault** installed.
 - If you want to use the plugins placeholder in other plugins, then you need **PlaceholderAPI**.
