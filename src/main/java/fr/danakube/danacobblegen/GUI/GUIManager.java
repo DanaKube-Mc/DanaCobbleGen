@@ -92,7 +92,9 @@ public class GUIManager {
 
 					for (String line : rawLore) {
 						if (line.contains("%requirements%")) {
-							finalLore.addAll(requirementsLines);
+							for (String req : requirementsLines) {
+								finalLore.add(Lang.color(line.replace("%requirements%", req)));
+							}
 						} else {
 							finalLore.add(Lang.color(line));
 						}
@@ -149,7 +151,9 @@ public class GUIManager {
 
 						for (String line : rawLore) {
 							if (line.contains("%requirements%")) {
-								finalLore.addAll(requirementsLines);
+								for (String req : requirementsLines) {
+									finalLore.add(Lang.color(line.replace("%requirements%", req)));
+								}
 							} else {
 								line = line.replace("%level%", String.valueOf(level));
 								line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
