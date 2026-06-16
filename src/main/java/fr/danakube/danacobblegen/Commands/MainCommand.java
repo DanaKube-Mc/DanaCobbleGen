@@ -70,19 +70,19 @@ public class MainCommand implements CommandExecutor{
 				}
 				sender.sendMessage(Lang.PREFIX + Lang.RELOAD_SUCCESS.toString().replaceAll("%time%", String.valueOf(time3)));
 			}else if(args[1].equalsIgnoreCase("support")) {
-				sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Lang.PREFIX + "&7To get support join our discord: https://discord.gg/6UpwEDUm6V"));
+				sender.sendMessage(Lang.color(Lang.PREFIX + "&7To get support join our discord: https://discord.gg/6UpwEDUm6V"));
 			}else if(args[1].equalsIgnoreCase("pastebin")) {
 				if(!pm.hasPermission(sender, "customcobblegen.admin.pastebin", true)) return false;
-				sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Lang.PREFIX + "&7Getting contents of files..."));
+				sender.sendMessage(Lang.color(Lang.PREFIX + "&7Getting contents of files..."));
 				
 	            final Response<String> postResult = new FileUploader().pastebinUpload("config.yml", "data//players.yml", "data//signs.yml", "lang.yml");
 
 				if (postResult.isError()) {
-					sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Lang.PREFIX + "&cError pasting to pastebin: " + postResult.getResult()));
+					sender.sendMessage(Lang.color(Lang.PREFIX + "&cError pasting to pastebin: " + postResult.getResult()));
 					return false;
 				}
-				sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Lang.PREFIX + "&aSuccess pasting to pastebin! Send this link to the dev:"));
-				sender.sendMessage(ChatColor.translateAlternateColorCodes('&', Lang.PREFIX + "&a" + postResult.getResult()));
+				sender.sendMessage(Lang.color(Lang.PREFIX + "&aSuccess pasting to pastebin! Send this link to the dev:"));
+				sender.sendMessage(Lang.color(Lang.PREFIX + "&a" + postResult.getResult()));
 				
 			}else if(args[1].equalsIgnoreCase("debug")){
 				if(sender instanceof Player p) {
@@ -91,40 +91,40 @@ public class MainCommand implements CommandExecutor{
 					UUID uuid = p.getUniqueId();
 					//Console or player with permission
 					if(args.length < 3) {
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cCurrently no use for the /ccg admin debug command"));
+						sender.sendMessage(Lang.color("&cCurrently no use for the /ccg admin debug command"));
 						return true;
 					}else if(args[2].equalsIgnoreCase("island")) {
 						if(plugin.getIslandHook() == null) {
-							sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cNo skyblock plugins available"));
+							sender.sendMessage(Lang.color("&cNo skyblock plugins available"));
 							return true;
 						}else if(!plugin.getIslandHook().hasIsland(uuid)) {
-							sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cYou have no island"));
+							sender.sendMessage(Lang.color("&cYou have no island"));
 							return true;
 						}
 						
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6&lDebug info on island accessible by plugin"));
+						sender.sendMessage(Lang.color("&6&lDebug info on island accessible by plugin"));
 						int level = plugin.getIslandHook().getIslandLevel(uuid);
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6Your uuid: &8" + uuid));
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6isLeader: &8" + plugin.getIslandHook().isPlayerLeader(uuid)));
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6Level: &8" + level));
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6Players online: &8" + Arrays.toString(plugin.getIslandHook().getArrayOfIslandMembers(uuid))));
+						sender.sendMessage(Lang.color("&6Your uuid: &8" + uuid));
+						sender.sendMessage(Lang.color("&6isLeader: &8" + plugin.getIslandHook().isPlayerLeader(uuid)));
+						sender.sendMessage(Lang.color("&6Level: &8" + level));
+						sender.sendMessage(Lang.color("&6Players online: &8" + Arrays.toString(plugin.getIslandHook().getArrayOfIslandMembers(uuid))));
 						
 					}else if(args[2].equalsIgnoreCase("selected")) {
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6&lDebug info on selected tiers accessible by plugin"));
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&8Number of players data loaded: &6" + plugin.getPlayerDatabase().getAllPlayerData().size()));
+						sender.sendMessage(Lang.color("&6&lDebug info on selected tiers accessible by plugin"));
+						sender.sendMessage(Lang.color("&8Number of players data loaded: &6" + plugin.getPlayerDatabase().getAllPlayerData().size()));
 					}else if(args[2].equalsIgnoreCase("pistons")) {
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6&lDebug info on pistons accessible by plugin"));
+						sender.sendMessage(Lang.color("&6&lDebug info on pistons accessible by plugin"));
 						BlockManager bm = BlockManager.getInstance();
-						sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&8Number of pistons data loaded: &6" + bm.getKnownGenPistons().size()));
+						sender.sendMessage(Lang.color("&8Number of pistons data loaded: &6" + bm.getKnownGenPistons().size()));
 						
 						
 						Map<Location, GenPiston> pistons = bm.getKnownGenPistons();
-						if(pistons == null) sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cNo pistons loaded"));
+						if(pistons == null) sender.sendMessage(Lang.color("&cNo pistons loaded"));
 						else{
-							sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6Your uuid: &8" + uuid));
-							sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7Pistons loaded:"));
+							sender.sendMessage(Lang.color("&6Your uuid: &8" + uuid));
+							sender.sendMessage(Lang.color("&7Pistons loaded:"));
 							for(GenPiston piston : pistons.values()) {
-								sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&6" + piston.getLoc().toString() + " " + (piston.getUUID().equals(uuid) ? "&a" : "&c") + piston.getUUID().toString()));
+								sender.sendMessage(Lang.color("&6" + piston.getLoc().toString() + " " + (piston.getUUID().equals(uuid) ? "&a" : "&c") + piston.getUUID().toString()));
 							}
 						}
 						
@@ -180,7 +180,7 @@ public class MainCommand implements CommandExecutor{
 						sender.sendMessage(Lang.DATABASE_MIGRATE_ESTABLISHING_CONNECTION.toString(newType));
 						Response<String> response = newDatabase.establishConnection();
 						if(response.isError()){
-							sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&c" + response.getResult()));
+							sender.sendMessage(Lang.color("&c" + response.getResult()));
 							return true;
 						}
 					}

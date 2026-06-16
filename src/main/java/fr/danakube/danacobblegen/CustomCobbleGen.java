@@ -323,7 +323,7 @@ public class CustomCobbleGen extends JavaPlugin {
 	}
 	public void debug(String message, boolean overrideConfigOption){
 		if(!overrideConfigOption && !Setting.DEBUG.getBoolean()) return;
-		Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&8[&3&lCustomCobbleGen&8]: &c&lDebug &8-&7 " + message));
+		Bukkit.getConsoleSender().sendMessage(Lang.color("&8[&3&lDanaCobbleGen&8]: &c&lDebug &8-&7 " + message));
 	}
 	
 	public void log(Object... objects) {
@@ -349,7 +349,7 @@ public class CustomCobbleGen extends JavaPlugin {
 	}
 
 	public void log(String message){
-		Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', CONSOLEPREFIX + "&8&lLog &8-&7 " + message));
+		Bukkit.getConsoleSender().sendMessage(Lang.color(CONSOLEPREFIX + "&8&lLog &8-&7 " + message));
 	}
 	
 	public void error(String message) {

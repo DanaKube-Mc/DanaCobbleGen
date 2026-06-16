@@ -41,7 +41,7 @@ public class GUIManager {
 			FileConfiguration guiConfig = plugin.guiConfig;
 
 			// Load GUI Settings
-			String title = ChatColor.translateAlternateColorCodes('&', guiConfig.getString("main-menu.title", "&3&lGenerator Upgrades"));
+			String title = Lang.color(guiConfig.getString("main-menu.title", "&3&lGenerator Upgrades"));
 			guiSize = guiConfig.getInt("main-menu.size", 54);
 			ch = new CustomHolder(guiSize, title);
 
@@ -61,7 +61,7 @@ public class GUIManager {
 				int level = plugin.getPlayerDatabase().getPlayerData(p.getUniqueId()).getOreLevel(modeId, ore.getId());
 				ItemStack item = new ItemStack(ore.getIcon());
 				ItemMeta meta = item.getItemMeta();
-				meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', ore.getDisplayName()));
+				meta.setDisplayName(Lang.color(ore.getDisplayName()));
 
 				List<String> rawLore;
 				List<String> finalLore = new ArrayList<>();
@@ -73,9 +73,9 @@ public class GUIManager {
 					List<String> requirementsLines = new ArrayList<>();
 					for (Requirement r : ore.getUnlockRequirements()) {
 						if (r.getRequirementType() == RequirementType.MONEY) {
-							requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&e$ " + r.getRequirementValue()));
+							requirementsLines.add(Lang.color("&e$ " + r.getRequirementValue()));
 						} else if (r.getRequirementType() == RequirementType.XP) {
-							requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&a" + r.getRequirementValue() + " XP Levels"));
+							requirementsLines.add(Lang.color("&a" + r.getRequirementValue() + " XP Levels"));
 						}
 					}
 
@@ -83,7 +83,7 @@ public class GUIManager {
 						if (line.contains("%requirements%")) {
 							finalLore.addAll(requirementsLines);
 						} else {
-							finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+							finalLore.add(Lang.color(line));
 						}
 					}
 
@@ -101,7 +101,7 @@ public class GUIManager {
 						if (canAfford) {
 							for (Requirement r : ore.getUnlockRequirements()) r.onPurchase(player1);
 							plugin.getPlayerDatabase().getPlayerData(player1.getUniqueId()).setOreLevel(modeId, ore.getId(), 0);
-							player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have unlocked " + ChatColor.translateAlternateColorCodes('&', ore.getDisplayName()) + "!");
+							player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have unlocked " + Lang.color(ore.getDisplayName()) + "!");
 							new MainGUI(player1).open();
 						} else {
 							player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
@@ -123,7 +123,7 @@ public class GUIManager {
 						for (String line : rawLore) {
 							line = line.replace("%level%", String.valueOf(level));
 							line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
-							finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+							finalLore.add(Lang.color(line));
 						}
 						meta.setLore(finalLore);
 						item.setItemMeta(meta);
@@ -134,9 +134,9 @@ public class GUIManager {
 						List<String> requirementsLines = new ArrayList<>();
 						for (Requirement r : nextUpgrade.getRequirements()) {
 							if (r.getRequirementType() == RequirementType.MONEY) {
-								requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&e$ " + r.getRequirementValue()));
+								requirementsLines.add(Lang.color("&e$ " + r.getRequirementValue()));
 							} else if (r.getRequirementType() == RequirementType.XP) {
-								requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&a" + r.getRequirementValue() + " XP Levels"));
+								requirementsLines.add(Lang.color("&a" + r.getRequirementValue() + " XP Levels"));
 							}
 						}
 
@@ -147,7 +147,7 @@ public class GUIManager {
 								line = line.replace("%level%", String.valueOf(level));
 								line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
 								line = line.replace("%next_percentage%", String.valueOf(nextUpgrade.getPercentage()));
-								finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+								finalLore.add(Lang.color(line));
 							}
 						}
 						
@@ -165,7 +165,7 @@ public class GUIManager {
 							if (canAfford) {
 								for (Requirement r : nextUpgrade.getRequirements()) r.onPurchase(player1);
 								plugin.getPlayerDatabase().getPlayerData(player1.getUniqueId()).setOreLevel(modeId, ore.getId(), level + 1);
-								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have upgraded " + ChatColor.translateAlternateColorCodes('&', ore.getDisplayName()) + "!");
+								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have upgraded " + Lang.color(ore.getDisplayName()) + "!");
 								new MainGUI(player1).open();
 							} else {
 								player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
@@ -183,7 +183,7 @@ public class GUIManager {
 				Material statsMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.stats-item.material", "BOOK")).orElse(XMaterial.BOOK).parseMaterial();
 				ItemStack statsItem = new ItemStack(statsMat != null ? statsMat : Material.BOOK);
 				ItemMeta statsMeta = statsItem.getItemMeta();
-				statsMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', guiConfig.getString("main-menu.stats-item.name", "&6Generator Stats")));
+				statsMeta.setDisplayName(Lang.color(guiConfig.getString("main-menu.stats-item.name", "&6Generator Stats")));
 				
 				List<String> rawStatsLore = guiConfig.getStringList("main-menu.stats-item.lore");
 				List<String> finalStatsLore = new ArrayList<>();
@@ -198,7 +198,7 @@ public class GUIManager {
 					if (line.contains("%rates%")) {
 						finalStatsLore.addAll(ratesLines);
 					} else {
-						finalStatsLore.add(ChatColor.translateAlternateColorCodes('&', line));
+						finalStatsLore.add(Lang.color(line));
 					}
 				}
 				statsMeta.setLore(finalStatsLore);
@@ -209,7 +209,7 @@ public class GUIManager {
 			// Add Filler Background
 			if (guiConfig.getBoolean("main-menu.filler.enabled", true)) {
 				Material fillerMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.filler.material", "GRAY_STAINED_GLASS_PANE")).orElse(XMaterial.GRAY_STAINED_GLASS_PANE).parseMaterial();
-				String fillerName = ChatColor.translateAlternateColorCodes('&', guiConfig.getString("main-menu.filler.name", " "));
+				String fillerName = Lang.color(guiConfig.getString("main-menu.filler.name", " "));
 				ItemStack backgroundItem = new ItemLib(fillerMat != null ? fillerMat : Material.STONE, 1, (short) 7, fillerName).create();
 				List<Integer> fillerSlots = guiConfig.getIntegerList("main-menu.filler.slots");
 				for (int i : fillerSlots) {

@@ -143,7 +143,7 @@ public class Files extends YamlConfiguration
     public String getColored(String path)
     {
         String atPath = getString(path);
-        return atPath == null ? null : ChatColor.translateAlternateColorCodes('&', atPath);
+        return atPath == null ? null : Lang.color(atPath);
     }
 
     public void setLocation(String path, Location location)
