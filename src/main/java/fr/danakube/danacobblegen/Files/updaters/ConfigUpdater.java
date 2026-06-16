@@ -34,57 +34,23 @@ public class ConfigUpdater extends YamlConfiguration {
 			config.addDefault(generationModePath + ".0.generationSound", "ENTITY_EXPERIENCE_ORB_PICKUP");
 		}
 
-		String tiersPath = Setting.SECTION_TIERS.getPath();
-		if(!config.contains(tiersPath)) {
-			//Default tier 0
-			config.addDefault(tiersPath + ".default." + 0 + ".name", "Default");
-			config.addDefault(tiersPath + ".default." + 0 + ".icon", "COBBLESTONE");
-			config.addDefault(tiersPath + ".default." + 0 + ".price.money", 0);
-			config.addDefault(tiersPath + ".default." + 0 + ".contains.COBBLESTONE", 90);
-			config.addDefault(tiersPath + ".default." + 0 + ".contains.COAL_ORE", 10);
-			
-			//Default tier 1
-			config.addDefault(tiersPath + ".default." + 1 + ".name", "Basic");
-			config.addDefault(tiersPath + ".default." + 1 + ".icon", "COAL_BLOCK");
-			config.addDefault(tiersPath + ".default." + 1 + ".price.money", 1000);
-			config.addDefault(tiersPath + ".default." + 1 + ".contains.COBBLESTONE", 70);
-			config.addDefault(tiersPath + ".default." + 1 + ".contains.COAL_ORE", 20);
-			config.addDefault(tiersPath + ".default." + 1 + ".contains.IRON_ORE", 10);
-			
-			//Default tier 2
-			config.addDefault(tiersPath + ".default." + 2 + ".name", "Advanced");
-			config.addDefault(tiersPath + ".default." + 2 + ".icon", "IRON_BLOCK");
-			config.addDefault(tiersPath + ".default." + 2 + ".price.money", 2000);
-			config.addDefault(tiersPath + ".default." + 2 + ".price.items.COBBLESTONE", 64);
-			config.addDefault(tiersPath + ".default." + 2 + ".contains.COBBLESTONE", 50);
-			config.addDefault(tiersPath + ".default." + 2 + ".contains.COAL_ORE", 30);
-			config.addDefault(tiersPath + ".default." + 2 + ".contains.IRON_ORE", 20);
-			
-			//VIP tier 0
-			config.addDefault(tiersPath + ".vip." + 0 + ".name", "Basic VIP");
-			config.addDefault(tiersPath + ".vip." + 0 + ".icon", "COBBLESTONE");
-			config.addDefault(tiersPath + ".vip." + 0 + ".price.money", 0);
-			config.addDefault(tiersPath + ".vip." + 0 + ".price.xp", 5);
-			config.addDefault(tiersPath + ".vip." + 0 + ".contains.COBBLESTONE", 90);
-			config.addDefault(tiersPath + ".vip." + 0 + ".contains.COAL_ORE", 5);
-			config.addDefault(tiersPath + ".vip." + 0 + ".contains.IRON_ORE", 5);
-			
-			//VIP tier 1
-			config.addDefault(tiersPath + ".vip." + 1 + ".name", "Advanced VIP");
-			config.addDefault(tiersPath + ".vip." + 1 + ".icon", "COAL_BLOCK");
-			config.addDefault(tiersPath + ".vip." + 1 + ".price.money", 500);
-			config.addDefault(tiersPath + ".vip." + 1 + ".contains.COBBLESTONE", 60);
-			config.addDefault(tiersPath + ".vip." + 1 + ".contains.COAL_ORE", 20);
-			config.addDefault(tiersPath + ".vip." + 1 + ".contains.IRON_ORE", 20);
-			
-			//VIP tier 2
-			config.addDefault(tiersPath + ".vip." + 2 + ".name", "Pro VIP");
-			config.addDefault(tiersPath + ".vip." + 2 + ".icon", "IRON_BLOCK");
-			config.addDefault(tiersPath + ".vip." + 2 + ".price.money", 1000);
-			config.addDefault(tiersPath + ".vip." + 2 + ".contains.COBBLESTONE", 25);
-			config.addDefault(tiersPath + ".vip." + 2 + ".contains.COAL_ORE", 35);
-			config.addDefault(tiersPath + ".vip." + 2 + ".contains.IRON_ORE", 30);
-			config.addDefault(tiersPath + ".vip." + 2 + ".contains.DIAMOND_ORE", 10);
+		String dynPath = "dynamic-generator.0";
+		if(!config.contains("dynamic-generator")) {
+			config.addDefault(dynPath + ".default-rates.COBBLESTONE", 95.0);
+			config.addDefault(dynPath + ".default-rates.COAL_ORE", 5.0);
+			config.addDefault(dynPath + ".buffer-material", "COBBLESTONE");
+
+			String orePath = dynPath + ".ores.DIAMOND_ORE";
+			config.addDefault(orePath + ".displayName", "&bDiamond Ore");
+			config.addDefault(orePath + ".icon", "DIAMOND_ORE");
+			config.addDefault(orePath + ".unlock.start-percentage", 1.0);
+			config.addDefault(orePath + ".unlock.money", 35000);
+
+			config.addDefault(orePath + ".upgrades.1.percentage", 2.0);
+			config.addDefault(orePath + ".upgrades.1.money", 50000);
+
+			config.addDefault(orePath + ".upgrades.2.percentage", 3.0);
+			config.addDefault(orePath + ".upgrades.2.money", 75000);
 		}
 		config.options().copyDefaults(true);
 		plugin.saveDefaultConfig();

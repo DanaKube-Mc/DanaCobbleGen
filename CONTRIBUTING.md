@@ -1,5 +1,5 @@
 <!-- omit in toc -->
-# Contributing to CustomCobbleGen
+# Contributing to DanaCobbleGen
 
 First off, thanks for taking the time to contribute! ❤️
 

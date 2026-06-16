@@ -1,7 +1,6 @@
 package fr.danakube.danacobblegen;
 
 import com.cryptomorin.xseries.XMaterial;
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.Commands.MainCommand;
 import fr.danakube.danacobblegen.Commands.MainTabComplete;
 import fr.danakube.danacobblegen.Events.BlockEvents;
@@ -11,14 +10,12 @@ import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Files.Setting;
 import fr.danakube.danacobblegen.Files.updaters.ConfigUpdater;
 import fr.danakube.danacobblegen.Files.updaters.LangFileUpdater;
-import fr.danakube.danacobblegen.Files.updaters.SignsFileUpdater;
 import fr.danakube.danacobblegen.GUI.InventoryEvents;
 import fr.danakube.danacobblegen.Hooks.*;
 import fr.danakube.danacobblegen.Managers.BlockManager;
 import fr.danakube.danacobblegen.Managers.EconomyManager;
 import fr.danakube.danacobblegen.Managers.GeneratorModeManager;
-import fr.danakube.danacobblegen.Managers.TierManager;
-import fr.danakube.danacobblegen.Signs.SignManager;
+import fr.danakube.danacobblegen.Managers.DynamicGeneratorManager;
 import fr.danakube.danacobblegen.Utils.Metrics.Metrics;
 import fr.danakube.danacobblegen.Utils.TierPlaceholderExpansion;
 import fr.danakube.danacobblegen.databases.MySQLPlayerDatabase;
@@ -54,8 +51,7 @@ public class CustomCobbleGen extends JavaPlugin {
 	private PlayerDatabase playerDatabase;
 	private FileConfiguration signsConfig;
 	private File signsConfigFile;
-	private TierManager tierManager;
-	private SignManager signManager;
+	private DynamicGeneratorManager dynamicGeneratorManager;
 	private GeneratorModeManager generatorModeManager;
 	public boolean isUsingPlaceholderAPI = false;
 	private List<IslandHook> islandHooks;
@@ -67,8 +63,7 @@ public class CustomCobbleGen extends JavaPlugin {
 	public void onEnable(){
 		double time = System.currentTimeMillis();
 		plugin = this;
-		tierManager = TierManager.getInstance();
-		signManager = SignManager.getInstance();
+		dynamicGeneratorManager = DynamicGeneratorManager.getInstance();
 		Setting.setFile(plugin.getConfig());
 		new ConfigUpdater();
 		saveConfig();
@@ -88,21 +83,18 @@ public class CustomCobbleGen extends JavaPlugin {
 		new LangFileUpdater(plugin);
 		Lang.setFile(lang);
 		this.debug("Lang is now setup&2 \u2713");
-		// Setup tiers
-		tierManager.load();
-		this.debug("Tiers is now setup&2 \u2713");
+		// Setup dynamic generator
+		dynamicGeneratorManager.load();
+		this.debug("Dynamic Generator is now setup&2 \u2713");
 		// Setup signs configs
 		signsConfig = null;
 		signsConfigFile = null;
-		new SignsFileUpdater(plugin);
-		signManager.loadSignsFromFile(true);
-		this.debug("Signs is now setup&2 \u2713");
 		plugin.getPlayerDatabase().loadEverythingFromDatabase();
 		islandHooks = new ArrayList<>(Arrays.asList(new BentoboxHook(), new SuperiorSkyblock2Hook()));
 		this.setupHooks();
 
 		if(Setting.AUTO_SAVE_ENABLED.getBoolean()){
-			tierManager.startAutoSave();
+			dynamicGeneratorManager.startAutoSave();
 			plugin.debug("Auto saver started&2 \u2713");
 		}
 
@@ -132,15 +124,13 @@ public class CustomCobbleGen extends JavaPlugin {
 		// Unload everything
 		plugin.log("Disabling CustomCobbleGen&2 \u2713");
 		
-		tierManager.unload();
-		if(tierManager.isAutoSaveActive()) tierManager.stopAutoSave();
+		dynamicGeneratorManager.unload();
+		if(dynamicGeneratorManager.isAutoSaveActive()) dynamicGeneratorManager.stopAutoSave();
 		if(this.getPlayerDatabase() != null) {
 			plugin.log("Saving player data&2 \u2713");
 			this.getPlayerDatabase().saveEverythingToDatabase(false);
 		}
-    	signManager.saveSignsToFile();
-		tierManager = null;
-		signManager = null;
+		dynamicGeneratorManager = null;
 		plugin.log("CustomCobbleGen is now disabled&2 \u2713");
 		plugin = null;
 	}
@@ -157,23 +147,17 @@ public class CustomCobbleGen extends JavaPlugin {
 			return numOfGenerators;
 		});
 		Metrics.SimplePie pistonChart = new Metrics.SimplePie("servers_using_pistons_for_automation", () -> Setting.AUTOMATION_PISTONS.getBoolean() ? "Enabled" : "Disabled");
-		Metrics.SimplePie signChart = new Metrics.SimplePie("servers_using_signs", () -> Setting.SIGNS_ENABLED.getBoolean() ? "Enabled" + (signManager.getSigns().isEmpty() ? " but not in use" : "") : "Disabled");
 		Metrics.SimplePie islandChart = new Metrics.SimplePie("connected_island_plugins", () -> connectedIslandPlugin);
 
 		Metrics.SimplePie selectOptionChart = new Metrics.SimplePie("tier_unlock_system", () -> Setting.ISLANDS_USEPERISLANDUNLOCKEDGENERATORS.getBoolean() ? "Island based" : "Player based");
 
 		Metrics.SimplePie tiersActiveChart = new Metrics.SimplePie("tiers_active", () -> {
-			int numOfTiers = 0;
-			for(List<Tier> tiers : tierManager.getTiers().values()) {
-				numOfTiers += tiers.size();
-			}
-			return numOfTiers + " tiers active";
+			return dynamicGeneratorManager.getDynamicOresByMode().size() + " modes active";
 		});
 
 		Metrics.SimplePie modesActiveChart = new Metrics.SimplePie("modes_active", () -> generatorModeManager.getModes().size() + " generation modes active");
 		metrics.addCustomChart(genChart);
 		metrics.addCustomChart(pistonChart);
-		metrics.addCustomChart(signChart);
 		metrics.addCustomChart(islandChart);
 		metrics.addCustomChart(selectOptionChart);
 		metrics.addCustomChart(tiersActiveChart);
@@ -260,17 +244,16 @@ public class CustomCobbleGen extends JavaPlugin {
 	}
 	
 	public void reloadPlugin() {
-		if(tierManager.isAutoSaveActive()) tierManager.stopAutoSave();
+		if(dynamicGeneratorManager.isAutoSaveActive()) dynamicGeneratorManager.stopAutoSave();
 		this.reloadConfig();
 		Setting.setFile(this.getConfig());
 		this.lang.reload();
 		this.getPlayerDatabase().reloadConnection();
 		this.reloadSignsConfig();
 		generatorModeManager.loadFromConfig();
-		signManager.loadSignsFromFile(true);
-		tierManager.reload();
-		tierManager = TierManager.getInstance();
-		if(Setting.AUTO_SAVE_ENABLED.getBoolean()) tierManager.startAutoSave();
+		dynamicGeneratorManager.reload();
+		dynamicGeneratorManager = DynamicGeneratorManager.getInstance();
+		if(Setting.AUTO_SAVE_ENABLED.getBoolean()) dynamicGeneratorManager.startAutoSave();
 	}
 	
 	public PlayerDatabase getPlayerDatabase() {

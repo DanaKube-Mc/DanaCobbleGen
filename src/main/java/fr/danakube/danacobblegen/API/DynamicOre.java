@@ -1,0 +1,68 @@
+package fr.danakube.danacobblegen.API;
+
+import org.bukkit.Material;
+import fr.danakube.danacobblegen.Requirements.Requirement;
+import java.util.List;
+import java.util.Map;
+
+public class DynamicOre {
+    private final String id;
+    private final String displayName;
+    private final Material icon;
+    private final int supportedGenerationMode;
+    private final List<Requirement> unlockRequirements;
+    private final double startPercentage;
+    private final Map<Integer, OreUpgrade> upgrades;
+
+    public DynamicOre(String id, String displayName, Material icon, int supportedGenerationMode, List<Requirement> unlockRequirements, double startPercentage, Map<Integer, OreUpgrade> upgrades) {
+        this.id = id;
+        this.displayName = displayName;
+        this.icon = icon;
+        this.supportedGenerationMode = supportedGenerationMode;
+        this.unlockRequirements = unlockRequirements;
+        this.startPercentage = startPercentage;
+        this.upgrades = upgrades;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public Material getIcon() {
+        return icon;
+    }
+
+    public int getSupportedGenerationMode() {
+        return supportedGenerationMode;
+    }
+
+    public List<Requirement> getUnlockRequirements() {
+        return unlockRequirements;
+    }
+
+    public double getStartPercentage() {
+        return startPercentage;
+    }
+
+    public Map<Integer, OreUpgrade> getUpgrades() {
+        return upgrades;
+    }
+
+    public OreUpgrade getUpgrade(int level) {
+        if (upgrades == null) return null;
+        return upgrades.get(level);
+    }
+
+    public int getMaxLevel() {
+        if (upgrades == null || upgrades.isEmpty()) return 0;
+        int max = 0;
+        for (int level : upgrades.keySet()) {
+            if (level > max) max = level;
+        }
+        return max;
+    }
+}

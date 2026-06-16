@@ -1,12 +1,10 @@
 package fr.danakube.danacobblegen.databases;
 
-import com.cryptomorin.xseries.XMaterial;
-import fr.danakube.danacobblegen.API.Tier;
-import fr.danakube.danacobblegen.Files.Setting;
-import fr.danakube.danacobblegen.Managers.GenPiston;
-import fr.danakube.danacobblegen.Utils.Response;
-import fr.danakube.danacobblegen.Utils.SelectedTiers;
 import fr.danakube.danacobblegen.Utils.StringUtils;
+import fr.danakube.danacobblegen.Utils.Response;
+import fr.danakube.danacobblegen.Files.Setting;
+import com.cryptomorin.xseries.XMaterial;
+import fr.danakube.danacobblegen.Managers.GenPiston;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -54,18 +52,6 @@ public class YamlPlayerDatabase extends PlayerDatabase {
 
         if (this.getPlayerConfig().getConfigurationSection("players") == null) {
             this.getPlayerConfig().createSection("players");
-        } else { //CONVERTER FROM 1.4.1 to 1.4.2+
-            ConfigurationSection section = getPlayerConfig().getConfigurationSection("players");
-            if (section == null) return new Response<>("Player section not found", true);
-            for (String s : section.getKeys(false)) {
-                if (this.getPlayerConfig().contains("players." + s + ".selected.class") || this.getPlayerConfig().contains("players." + s + ".selected.level")) { //This means that it is saved with the prev 1.4.2 format
-                    plugin.log("&cAuto updating player selected data for UUID: " + s);
-                    this.getPlayerConfig().set("players." + s + ".selected.0.class", this.getPlayerConfig().get("players." + s + ".selected.class"));
-                    this.getPlayerConfig().set("players." + s + ".selected.0.level", this.getPlayerConfig().get("players." + s + ".selected.level"));
-                    this.getPlayerConfig().set("players." + s + ".selected.level", null);
-                    this.getPlayerConfig().set("players." + s + ".selected.class", null);
-                }
-            }
         }
         this.getPlayerConfig().options().copyDefaults(true);
         this.savePlayerConfig();
@@ -136,48 +122,28 @@ public class YamlPlayerDatabase extends PlayerDatabase {
         if (this.containsPlayerData(uuid, false)){
             this.playerData.remove(uuid);
         }
-        SelectedTiers selectedTiers = new SelectedTiers(uuid, new ArrayList<>());
+        Map<Integer, Map<String, Integer>> unlockedOres = new HashMap<>();
         ConfigurationSection playerSection = this.getPlayerConfig().getConfigurationSection(path);
-        if (playerSection == null) {
-            plugin.debug("Could not find player section for " + uuid);
-            return;
-        }
-        if (playerSection.contains("selected")) {
-            ConfigurationSection selectedSection = playerSection.getConfigurationSection("selected");
-            if (selectedSection == null) return;
-            for (String s : selectedSection.getKeys(false)) {
-                int tierLevel = playerSection.getInt("selected." + s + ".level");
-                String tierClass = playerSection.getString("selected." + s + ".class");
-                Tier tier = tierManager.getTierByLevel(tierClass, tierLevel);
-                if (tier == null) {
-                    plugin.error("Selected tiers loaded incorrectly for " + uuid + " - Skipping load");
-                } else {
-                    plugin.debug("Added " + tier + " tier to selected list for " + uuid);
-                    selectedTiers.addTier(tier);
-                }
-            }
-        } else {
-            plugin.debug("Could not find selected section for " + uuid);
-            selectedTiers.addTier(tierManager.getTierByLevel("DEFAULT", 0));
-        }
-        List<Tier> purchasedTiers = new ArrayList<>();
-        if (playerSection.contains("purchased")) {
-            ConfigurationSection purchasedSection = playerSection.getConfigurationSection("purchased");
-            if (purchasedSection == null) return;
-            for (String purchasedClass : purchasedSection.getKeys(false)) {
-                List<Integer> purchasedLevels = purchasedSection.getIntegerList(purchasedClass);
-                for (int purchasedLevel : purchasedLevels) {
-                    Tier purchasedTier = tierManager.getTierByLevel(purchasedClass, purchasedLevel);
-                    if (purchasedTier == null) {
-                        plugin.error("Unknown purchased tier under the uuid &e" + uuid + "&c&l in the players.yml. Please remove this tier from the purchased list!", true);
-                        plugin.log("&c&lIf not manually added then please report this to the dev - Line 158 in YamlPlayerDatabase - loadFromDatabase");
-                        continue;
-                    }
-                    purchasedTiers.add(purchasedTier);
+        if (playerSection != null && playerSection.contains("dynamic-ores")) {
+            ConfigurationSection dynSec = playerSection.getConfigurationSection("dynamic-ores");
+            if (dynSec != null) {
+                for (String modeKey : dynSec.getKeys(false)) {
+                    try {
+                        int modeId = Integer.parseInt(modeKey);
+                        Map<String, Integer> ores = new HashMap<>();
+                        ConfigurationSection modeSec = dynSec.getConfigurationSection(modeKey);
+                        if (modeSec != null) {
+                            for (String oreId : modeSec.getKeys(false)) {
+                                ores.put(oreId, modeSec.getInt(oreId));
+                            }
+                        }
+                        unlockedOres.put(modeId, ores);
+                    } catch (NumberFormatException ignored) {}
                 }
             }
         }
-        PlayerData data = new PlayerData(uuid, selectedTiers, purchasedTiers);
+
+        PlayerData data = new PlayerData(uuid, unlockedOres);
         this.playerData.put(data.getUUID(), data);
         this.loadPistonsFromDatabase(uuid);
     }
@@ -194,41 +160,14 @@ public class YamlPlayerDatabase extends PlayerDatabase {
         UUID uuid = data.getUUID();
         String path = this.getPlayerPath(uuid);
 
-        /* SAVING THE SELECTED TIERS */
-        SelectedTiers selectedTiers = data.getSelectedTiers();
-        if (selectedTiers != null
-                && selectedTiers.getSelectedTiersMap() != null
-                && !selectedTiers.getSelectedTiersMap().isEmpty()) {
-            plugin.debug("Saving selected tier for " + uuid + ". Currently selected tiers " + selectedTiers);
-            int i = 0;
-            this.getPlayerConfig().set(path + ".selected", null);
-            for (Tier tier : selectedTiers.getSelectedTiersMap().values()) {
-                this.getPlayerConfig().set(path + ".selected." + i + ".class", tier.getTierClass());
-                this.getPlayerConfig().set(path + ".selected." + i + ".level", tier.getLevel());
-                i++;
-            }
-        }
-        /* SAVING THE SELECTED TIERS */
-        List<Tier> purchasedTiers = data.getPurchasedTiers();
-        if (purchasedTiers != null
-                && !purchasedTiers.isEmpty()) {
-            this.getPlayerConfig().set(path + ".purchased", null);
-            for (Tier purchasedTier : purchasedTiers) {
-                List<Integer> purchasedLevels = new ArrayList<>();
-
-                if (purchasedTier == null) {
-                    plugin.error("Unknown purchased tier under the uuid &e" + uuid + "&c&l in the players.yml. Please remove this tier from the purchased list!", true);
-                    plugin.log("&c&lIf not manually added then please report this to the dev - Line 200 in YamlPlayerDatabase - saveToDatabase");
-                    continue;
+        Map<Integer, Map<String, Integer>> unlockedOres = data.getUnlockedOres();
+        this.getPlayerConfig().set(path + ".dynamic-ores", null); // Clear old
+        if (unlockedOres != null && !unlockedOres.isEmpty()) {
+            for (Map.Entry<Integer, Map<String, Integer>> modeEntry : unlockedOres.entrySet()) {
+                for (Map.Entry<String, Integer> oreEntry : modeEntry.getValue().entrySet()) {
+                    this.getPlayerConfig().set(path + ".dynamic-ores." + modeEntry.getKey() + "." + oreEntry.getKey(), oreEntry.getValue());
                 }
-                plugin.debug("Saving purchased tier: " + purchasedTier.getName());
-                if (this.getPlayerConfig().contains(path + ".purchased." + purchasedTier.getTierClass())) {
-                    purchasedLevels = this.getPlayerConfig().getIntegerList(path + ".purchased." + purchasedTier.getTierClass());
-                }
-                if (!purchasedLevels.contains(purchasedTier.getLevel())) purchasedLevels.add(purchasedTier.getLevel());
-                this.getPlayerConfig().set(path + ".purchased." + purchasedTier.getTierClass(), purchasedLevels);
             }
-
         }
 
         /* SAVING THE GENERATING PISTONS */

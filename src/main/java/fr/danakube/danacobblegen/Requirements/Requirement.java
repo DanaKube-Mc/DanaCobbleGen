@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen.Requirements;
 
-import fr.danakube.danacobblegen.API.Tier;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -13,9 +12,9 @@ public interface Requirement {
 	
 	int getRequirementValue();
 	
-	List<String> addAvailableString(Tier tier, List<String> lore);
+	List<String> addAvailableString(List<String> lore);
 	
-	List<String> addUnavailableString(Tier tier, List<String> lore);
+	List<String> addUnavailableString(List<String> lore);
 	
 	void onPurchase(Player p);
 }

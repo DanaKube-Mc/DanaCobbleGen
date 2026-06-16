@@ -21,27 +21,24 @@ import java.util.UUID;
 public class GeneratorGenerateEvent extends Event implements Cancellable{
 
 	private boolean isCancelled = false;
-    private static final HandlerList HANDLERS_LIST = new HandlerList();
-	private GenMode mode = null;
-	private Tier tier = null;
+    private static final HandlerList HANDLERS_LIST = new HandlerList();	
+    private GenMode mode = null;
 	private Material result = null;
 	private UUID uuid = null;
 	private Location toBlock = null;
 	private boolean fallback = false;
     
     
-    public GeneratorGenerateEvent(GenMode mode, Tier tier, Material result, UUID uuid, Location toBlock) {
+    public GeneratorGenerateEvent(GenMode mode, Material result, UUID uuid, Location toBlock) {
     	this.mode = mode;
-    	this.tier = tier;
     	this.result = result;
     	this.uuid = uuid;
     	this.toBlock = toBlock;
     	this.fallback = false;
     }
     
-    public GeneratorGenerateEvent(GenMode mode, Tier tier, Material result, UUID uuid, Location toBlock, boolean isFallback) {
+    public GeneratorGenerateEvent(GenMode mode, Material result, UUID uuid, Location toBlock, boolean isFallback) {
     	this.mode = mode;
-    	this.tier = tier;
     	this.result = result;
     	this.uuid = uuid;
     	this.toBlock = toBlock;
@@ -56,13 +53,7 @@ public class GeneratorGenerateEvent extends Event implements Cancellable{
     	return mode;
     }
     
-    /**
-     * Gets the tier used
-     * @return Returns Tier used
-     */
-    public Tier getTierUsed() {
-    	return tier;
-    }
+    
     
     /**
      * Gets the player that is generating the block

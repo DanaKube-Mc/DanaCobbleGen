@@ -3,12 +3,9 @@ package fr.danakube.danacobblegen.API;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Hooks.IslandHook;
 import fr.danakube.danacobblegen.Managers.BlockManager;
-import fr.danakube.danacobblegen.Managers.TierManager;
+import fr.danakube.danacobblegen.Managers.DynamicGeneratorManager;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * CustomCobbleGen By @author Philip Flyvholm
@@ -17,7 +14,6 @@ import java.util.Map;
 public class CustomCobbleGenAPI {
 
 	private static CustomCobbleGenAPI instance = null;
-	private final TierManager tierManager;
 	private final CustomCobbleGen plugin;
 	private final BlockManager bm = BlockManager.getInstance();
 	
@@ -27,15 +23,13 @@ public class CustomCobbleGenAPI {
 	 */
 	public CustomCobbleGenAPI() {
 		plugin = CustomCobbleGen.getInstance();
-		tierManager = TierManager.getInstance();
 	}
 	
 	/**
-	 * Get a list of active tiers
-	 * @return This returns a map with class names as keys and a list of tiers in that class
+	 * Get the DynamicGeneratorManager
 	 */
-	public Map<String, List<Tier>> getTiers() {
-		return tierManager.getTiers();
+	public DynamicGeneratorManager getDynamicGeneratorManager() {
+		return DynamicGeneratorManager.getInstance();
 	}
 	
 	

@@ -1,26 +1,13 @@
 package fr.danakube.danacobblegen.Files;
 
 import me.clip.placeholderapi.PlaceholderAPI;
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Managers.EconomyManager;
-import fr.danakube.danacobblegen.Managers.TierManager;
-import fr.danakube.danacobblegen.Requirements.ItemsRequirement;
-import fr.danakube.danacobblegen.Requirements.Requirement;
-import fr.danakube.danacobblegen.Requirements.RequirementType;
-import fr.danakube.danacobblegen.Utils.SelectedTiers;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.*;
- 
-/**
-* An enum for requesting strings from the language file.
-* Made by gomeow.
-* Lang added by phil14052.
-* @author gomeow
-*/
 
 public enum Lang {
 	
@@ -41,8 +28,6 @@ public enum Lang {
     PLAYER_PLUGIN_HELP("player.plugin-help", "ARRAYLIST: &8&l&m--------------------- ,   , &3CustomCobbleGen - &8Help"
     		+ " , &3/%command%&8 - Show the GUI"
     		+ " , &3/%command% help&8 - Shows the help menu"
-    		+ " , &3/%command% tier&8 - Shows the currently selected tier"
-    		+ " , &3/%command% upgrade&8 - Upgrade to the next tier"
     		+ " , &3/%command% admin&8 - Shows list of admin commands"
     		+ " , &8&l&m---------------------"),
     PLAYER_NO_ISLAND("player.has-no-island", "&cCreate a island to control generators"),
@@ -73,7 +58,7 @@ public enum Lang {
     UPGRADE_NOT_PURCHASABLE_LEVEL("upgrade-not-purchasable-level", "&cYou need a island level of atleast %tier_price_level% to buy the tier"),
     UPGRADE_NOT_PURCHASABLE_ITEMS("upgrade-not-purchasable-items", "&cYou need %tier_price_items% to buy this tier"),
     FORCE_PURCHASED("force-purchased", "You have now force bought %selected_tier_name% for %player_name%"),
-    ADMIN_USAGE("admin-command-usage", "&cUsage: /%command% [reload, database, settier, givetier, forcebuy, withdraw]"),
+    ADMIN_USAGE("admin-command-usage", "&cUsage: /%command% [reload, database]"),
     GUI_BUY("gui.main.buy", "&aClick to buy"),
     GUI_BUY_LEADER_ONLY("gui.main.buy-leader-only", "&cOnly leaders of the island can buy"),
     GUI_CAN_NOT_AFFORD("gui.main.can-not-afford", "&cCan't afford"),
@@ -203,24 +188,13 @@ public enum Lang {
     private final String path;
     private final String def;
     private static YamlConfiguration LANG;
-    private final TierManager tm;
     private static final CustomCobbleGen plugin = CustomCobbleGen.getInstance();
 
-    /**
-    * Lang enum constructor.
-    * @param path The string path.
-    * @param start The default string.
-    */
     Lang(String path, String start) {
         this.path = path;
         this.def = start;
-        this.tm = TierManager.getInstance();
     }
  
-    /**
-    * Set the {@code YamlConfiguration} to use.
-    * @param config The config to set.
-    */
     public static void setFile(YamlConfiguration config) {
         LANG = config;
     }
@@ -231,7 +205,7 @@ public enum Lang {
     
     @Override
     public String toString() {
-    	String string = color(LANG.getString(this.getPath()));
+    	String string = color(LANG.getString(this.getPath(), this.getDefault()));
         if (this == PREFIX) string = string + " ";
         return string;
     }
@@ -242,43 +216,6 @@ public enum Lang {
     			string = PlaceholderAPI.setPlaceholders(p, string);
     		}
     		string = string.replace("%player_name%", p.getName());
-
-            UUID uuid = p.getUniqueId();
-    		if(plugin.getConfig().getBoolean("options.islands.usePerIslandUnlockedGenerators") && plugin.isConnectedToIslandPlugin()) {
-    			uuid = plugin.getIslandHook().getIslandLeaderFromPlayer(uuid);
-    		}
-    		SelectedTiers selectedTiers = TierManager.getInstance().getSelectedTiers(uuid);
-    		if(selectedTiers != null && selectedTiers.getSelectedTiersMap() != null && selectedTiers.getSelectedTiersMap().values() != null) {
-
-        		Collection<Tier> tiers = selectedTiers.getSelectedTiersMap().values();
-        		if(!tiers.isEmpty()) {
-            		StringJoiner levels = new StringJoiner(", ");
-            		StringJoiner classes = new StringJoiner(", ");
-            		StringJoiner names = new StringJoiner(", ");
-            		StringJoiner priceMoney = new StringJoiner(", ");
-            		StringJoiner priceXP = new StringJoiner(", ");
-            		StringJoiner priceLevel = new StringJoiner(", ");
-            		StringJoiner supportedModes = new StringJoiner(", ");
-            		for(Tier tier : tiers) {
-            			if(tier == null) continue;
-            			levels.add(tier.getLevel() + "");
-            			classes.add(tier.getTierClass());
-            			names.add(tier.getName());
-            			priceMoney.add(EconomyManager.getInstance().formatMoney(tier.getRequirementValue(RequirementType.MONEY)) + "");
-            			priceXP.add(tier.getRequirementValue(RequirementType.XP) + "");
-            			priceLevel.add(tier.getRequirementValue(RequirementType.LEVEL) + "");
-            			supportedModes.add(tier.getSupportedMode().getId() != -1 ? tier.getSupportedMode().getName() : Lang.PLACEHOLDER_RESPONSE_ALL.toString());
-            			
-            		}
-                	string = string.replace("%selected_tier_level%", levels.toString());
-                	string = string.replace("%selected_tier_class%", classes.toString());	
-                	string = string.replace("%selected_tier_name%", names.toString());		
-                	string = string.replace("%selected_tier_price_money%", priceMoney.toString());		
-                	string = string.replace("%selected_tier_price_xp%", priceXP.toString());
-                	string = string.replace("%selected_tier_price_level%", priceLevel.toString());	
-                	string = string.replace("%selected_tier_supported_mode%", supportedModes.toString());	
-        		}
-    		}
     	}
     	return string;
     }
@@ -287,47 +224,6 @@ public enum Lang {
     	String string = this.toString();
     	string = replacePlaceholders(p, string);
         return string;
-    }
-    public String toString(Tier tier) {
-    	String string = this.toString();
-    	if(tier != null) {
-        	string = string.replace("%tier_level%", tier.getLevel() + "");
-        	string = string.replace("%tier_name%", tier.getName() + "");
-        	string = string.replace("%tier_class%", tier.getTierClass() + "");
-        	string = string.replace("%tier_price_money%", tier.hasRequirement(RequirementType.MONEY) ? EconomyManager.getInstance().formatMoney(tier.getRequirementValue(RequirementType.MONEY)) + "" : "0?");
-        	string = string.replace("%tier_price_xp%", tier.hasRequirement(RequirementType.XP) ? tier.getRequirementValue(RequirementType.XP) + "" : "0");
-        	string = string.replace("%tier_price_level%", tier.hasRequirement(RequirementType.LEVEL) ? tier.getRequirementValue(RequirementType.LEVEL) + "" : "0");
-        	String placeholder = "%tier_supported_mode%";
-        	if(tier.getSupportedMode() == null) {        	
-        		string = string.replaceAll(placeholder, Lang.PLACEHOLDER_RESPONSE_ALL.toString());
-        	}else if(tier.getSupportedMode().getId() == -1) {
-        		string = string.replaceAll(placeholder, Lang.PLACEHOLDER_RESPONSE_ALL.toString());
-        	}else {
-        		string = string.replaceAll(placeholder, tier.getSupportedMode().getName());
-        		
-        	}
-        	if(string.contains("%tier_price_items%")) {
-        		String result = "None";
-        		if(tier.hasRequirements()) {
-
-            		List<Requirement> requirements = tier.getRequirements();
-            		for(Requirement requirement : requirements) {
-            			if(requirement instanceof ItemsRequirement) {
-            				result = requirement.toString();
-            			}
-            		}
-        		}
-        		string = string.replace("%tier_price_items%", result);
-        		
-        		
-        	}
-        	
-    	}
-        return string;
-    }
-    
-    public String toString(Player p, Tier tier) {
-    	return replacePlaceholders(p, this.toString(tier));
     }
     
     public String toString(String... strings) {
@@ -342,60 +238,30 @@ public enum Lang {
     
     public List<String> toStringList(){
     	List<String> s = LANG.getStringList(this.path);
+		if (s.isEmpty()) {
+			s = Arrays.asList(this.getDefault().split(" , "));
+		}
     	List<String> colored_s = new ArrayList<String>();
     	for(String string : s){
-    		colored_s.add(color(string));
+    		colored_s.add(color(string.replace("ARRAYLIST: ", "")));
     	}
     	return colored_s;
     }
     
     public List<String> toStringList(Player p){
     	List<String> s = LANG.getStringList(this.path);
+		if (s.isEmpty()) {
+			s = Arrays.asList(this.getDefault().split(" , "));
+		}
     	List<String> colored_s = new ArrayList<>();
     	for(String string : s){
+			string = string.replace("ARRAYLIST: ", "");
     		string = color(string);
     		if(p != null && p.isOnline()) {
         		if(CustomCobbleGen.getInstance().isUsingPlaceholderAPI) {
         			string = PlaceholderAPI.setPlaceholders(p, string);
         		}
         		string = string.replace("%player_name%", p.getName());
-
-                UUID uuid = p.getUniqueId();
-        		if(plugin.getConfig().getBoolean("options.islands.usePerIslandUnlockedGenerators") && plugin.isConnectedToIslandPlugin()) {
-        			uuid = plugin.getIslandHook().getIslandLeaderFromPlayer(uuid);
-        		}
-        		SelectedTiers selectedTiers = tm.getSelectedTiers(uuid);
-
-        		if(selectedTiers != null && selectedTiers.getSelectedTiersMap() != null && selectedTiers.getSelectedTiersMap().values() != null) {
-        			Collection<Tier> tiers = selectedTiers.getSelectedTiersMap().values();
-            		if(!tiers.isEmpty()) {
-                		StringJoiner levels = new StringJoiner(", ");
-                		StringJoiner classes = new StringJoiner(", ");
-                		StringJoiner names = new StringJoiner(", ");
-                		StringJoiner priceMoney = new StringJoiner(", ");
-                		StringJoiner priceXP = new StringJoiner(", ");
-                		StringJoiner priceLevel = new StringJoiner(", ");
-                		StringJoiner supportedModes = new StringJoiner(", ");
-                		for(Tier tier : tiers) {
-                			if(tier == null) continue;
-                			levels.add(tier.getLevel() + "");
-                			classes.add(tier.getTierClass());
-                			names.add(tier.getName());
-                			priceMoney.add(EconomyManager.getInstance().formatMoney(tier.getRequirementValue(RequirementType.MONEY)) + "");
-                			priceXP.add(tier.getRequirementValue(RequirementType.XP) + "");
-                			priceLevel.add(tier.getRequirementValue(RequirementType.LEVEL) + "");
-                			supportedModes.add(tier.getSupportedMode().getId() != -1 ? tier.getSupportedMode().getName() : Lang.PLACEHOLDER_RESPONSE_ALL.toString());
-                			
-                		}
-                    	string = string.replace("%selected_tier_level%", levels.toString());
-                    	string = string.replace("%selected_tier_class%", classes.toString());	
-                    	string = string.replace("%selected_tier_name%", names.toString());		
-                    	string = string.replace("%selected_tier_price_money%", priceMoney.toString());		
-                    	string = string.replace("%selected_tier_price_xp%", priceXP.toString());
-                    	string = string.replace("%selected_tier_price_level%", priceLevel.toString());	
-                    	string = string.replace("%selected_tier_supported_mode%", supportedModes.toString());	
-            		}
-        		}
         	}
     		colored_s.add(string);
     	}
@@ -404,8 +270,12 @@ public enum Lang {
     
     public List<String> toStringList(String... strings){
     	List<String> stringList = LANG.getStringList(this.path);
+		if (stringList.isEmpty()) {
+			stringList = Arrays.asList(this.getDefault().split(" , "));
+		}
     	List<String> colored_s = new ArrayList<String>();
     	for(String string : stringList){
+			string = string.replace("ARRAYLIST: ", "");
     		string = color(string);
     		int i = 0;
     		for(String s : strings) {
@@ -417,18 +287,10 @@ public enum Lang {
     	return colored_s;
     }
     
-    /**
-    * Get the default value of the path.
-    * @return The default value of the path.
-    */
     public String getDefault() {
         return this.def;
     }
  
-    /**
-    * Get the path to the string.
-    * @return The path to the string.
-    */
     public String getPath() {
         return this.path;
     }

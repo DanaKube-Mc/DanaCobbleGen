@@ -1,17 +1,11 @@
-/**
- * CustomCobbleGen By @author Philip Flyvholm
- * MySQLPlayerDatabase.java
- */
 package fr.danakube.danacobblegen.databases;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.Files.Setting;
 import fr.danakube.danacobblegen.Managers.GenPiston;
 import fr.danakube.danacobblegen.Utils.Response;
-import fr.danakube.danacobblegen.Utils.SelectedTiers;
 import fr.danakube.danacobblegen.Utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -24,10 +18,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-/**
- * @author Philip
- *
- */
 public class MySQLPlayerDatabase extends PlayerDatabase {
 
 	private HikariDataSource ds;
@@ -35,7 +25,6 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
     private String TABLE_NAME;
     private String DATABASE_NAME;
     
-	
 	public MySQLPlayerDatabase() {
 		super();
 	}
@@ -75,12 +64,23 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 				if(!rs.next()) {
 					stmt.close();
 					rs.close();
-					stmt = connection.prepareStatement("CREATE TABLE ? (uuid VARCHAR(36), selected_tiers TEXT, purchased_tiers TEXT, pistons TEXT)",
+					stmt = connection.prepareStatement("CREATE TABLE `" + TABLE_NAME + "` (uuid VARCHAR(36), dynamic_ores TEXT, pistons TEXT)",
 							ResultSet.TYPE_SCROLL_INSENSITIVE,
 							ResultSet.CONCUR_UPDATABLE);
-					stmt.setString(1, TABLE_NAME);
 					stmt.execute();
-				}else {
+				} else {
+                    stmt.close();
+                    rs.close();
+                    stmt = connection.prepareStatement("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = 'selected_tiers'");
+                    stmt.setString(1, DATABASE_NAME);
+                    stmt.setString(2, TABLE_NAME);
+                    rs = stmt.executeQuery();
+                    if(rs.next()) {
+                        stmt.close();
+                        stmt = connection.prepareStatement("ALTER TABLE `" + TABLE_NAME + "` DROP COLUMN `selected_tiers`, DROP COLUMN `purchased_tiers`, ADD COLUMN `dynamic_ores` TEXT");
+                        stmt.execute();
+                        plugin.log("&cAuto updated MySQL table to new dynamic_ores format. Old tiers were reset.");
+                    }
 					plugin.debug("Found table " +  TABLE_NAME + " in database");
 				}
 	        } catch (SQLException e) {
@@ -122,20 +122,17 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 		return ds == null || ds.isClosed();
 	}
 
-	private String getSelectedTiersString(PlayerData data){
-		StringJoiner selectedTiers = new StringJoiner(",");
-		data.getSelectedTiers().getSelectedTiersMap().values().forEach(e ->
-				selectedTiers.add(e.getTierClass() + ":" + e.getLevel())
-		);
-		return selectedTiers.toString();
-	}
-
-	private String getPurchasedTiers(PlayerData data) {
-		StringJoiner purchasedTiers = new StringJoiner(",");
-		data.getPurchasedTiers().forEach(e ->
-				purchasedTiers.add(e.getTierClass() + ":" + e.getLevel())
-		);
-		return purchasedTiers.toString();
+	private String getDynamicOresString(PlayerData data){
+		StringJoiner dynamicOres = new StringJoiner(";");
+        Map<Integer, Map<String, Integer>> unlocked = data.getUnlockedOres();
+        if (unlocked != null) {
+            for (Map.Entry<Integer, Map<String, Integer>> modeEntry : unlocked.entrySet()) {
+                for (Map.Entry<String, Integer> oreEntry : modeEntry.getValue().entrySet()) {
+                    dynamicOres.add(modeEntry.getKey() + ":" + oreEntry.getKey() + ":" + oreEntry.getValue());
+                }
+            }
+        }
+		return dynamicOres.toString();
 	}
 
 	@Override
@@ -149,15 +146,13 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 			try {
 				Connection connection = getConnection();
 				PreparedStatement stmt = null;
-				String selectedTiers = getSelectedTiersString(data);
-				String purchasedTiers = getPurchasedTiers(data);
+				String dynamicOres = getDynamicOresString(data);
 				try {
 					UUID uuid = data.getUUID();
-					stmt = connection.prepareStatement("INSERT INTO `" + TABLE_NAME +"` (`uuid`, `selected_tiers`, `purchased_tiers`, `pistons`) VALUES (?,?,?,?)");
+					stmt = connection.prepareStatement("INSERT INTO `" + TABLE_NAME +"` (`uuid`, `dynamic_ores`, `pistons`) VALUES (?,?,?)");
 					stmt.setString(1, uuid.toString());
-					stmt.setString(2, selectedTiers);
-					stmt.setString(3, purchasedTiers);
-					stmt.setString(4, getPistonString(uuid));
+					stmt.setString(2, dynamicOres);
+					stmt.setString(3, getPistonString(uuid));
 					if(stmt.executeUpdate() <= 0) {
 						plugin.error("Failed to add player data for uuid " + uuid);
 					}
@@ -189,12 +184,12 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 			plugin.debug("Loading everything from database:", this.getType());
 			try {
 				Connection connection = getConnection();
-				try (PreparedStatement stmt = connection.prepareStatement("SELECT uuid, selected_tiers, purchased_tiers, pistons FROM `" + TABLE_NAME + "`"); ResultSet rs = stmt.executeQuery()) {
+				try (PreparedStatement stmt = connection.prepareStatement("SELECT uuid, dynamic_ores, pistons FROM `" + TABLE_NAME + "`"); ResultSet rs = stmt.executeQuery()) {
 					while (rs.next()) {
 						String result = rs.getString("uuid");
 						if (result == null) continue;
 						UUID uuid = UUID.fromString(result);
-						if (!load(uuid, rs.getString("selected_tiers"), rs.getString("purchased_tiers"))) {
+						if (!load(uuid, rs.getString("dynamic_ores"))) {
 							plugin.error("Failed loading user data for " + uuid);
 						}
 						if (!loadPiston(uuid, rs.getString("pistons"))) {
@@ -224,11 +219,11 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 				PreparedStatement stmt = null;
 				ResultSet rs = null;
 				try {
-					stmt = connection.prepareStatement("SELECT selected_tiers, purchased_tiers, pistons FROM `" + TABLE_NAME +"` WHERE uuid = ?");
+					stmt = connection.prepareStatement("SELECT dynamic_ores, pistons FROM `" + TABLE_NAME +"` WHERE uuid = ?");
 					stmt.setString(1, uuid.toString());
 					rs = stmt.executeQuery();
 					if(rs.next()) {
-						if(!load(uuid, rs.getString("selected_tiers"), rs.getString("purchased_tiers"))) {
+						if(!load(uuid, rs.getString("dynamic_ores"))) {
 							plugin.error("Failed loading user data for " + uuid);
 						}
 						if(!loadPiston(uuid, rs.getString("pistons"))) {
@@ -255,44 +250,30 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 
 	}
 
-	private boolean load(UUID uuid, String selected_tiers, String purchased_tiers) {
-		if(uuid == null || selected_tiers == null || purchased_tiers == null) return false;
-		//tierclass:tierlevel
-		String[] selected = selected_tiers.split(",");
-		SelectedTiers selectedTiers = new SelectedTiers(uuid, new ArrayList<>());
-		for(String tierString : selected) {
-			String[] splitTier = tierString.split(":");
-			String tierClass = splitTier[0];
-			int tierLevel;
-			try {
-				tierLevel = Integer.parseInt(splitTier[1]);	
-				Tier tier = this.tierManager.getTierByLevel(tierClass, tierLevel);
-				if(tier == null) continue;
-				selectedTiers.addTier(tier);
-			}catch(NumberFormatException ignored) {
-				//Do nothing (Continue)
-			}
-		}
-		String[] purchased = selected_tiers.split(",");
-		List<Tier> purchasedTiers = new ArrayList<>();
-		for(String tierString : purchased) {
-			String[] splitTier = tierString.split(":");
-			String tierClass = splitTier[0];
-			int tierLevel;
-			try {
-				tierLevel = Integer.parseInt(splitTier[1]);	
-				Tier tier = this.tierManager.getTierByLevel(tierClass, tierLevel);
-				if(tier == null) continue;
-				purchasedTiers.add(tier);
-			}catch(NumberFormatException ignored) {
-				//Do nothing (Continue)
-			}
-		}
+	private boolean load(UUID uuid, String dynamic_ores) {
+		if(uuid == null) return false;
+		Map<Integer, Map<String, Integer>> unlockedOres = new HashMap<>();
+        if (dynamic_ores != null && !dynamic_ores.isEmpty()) {
+            String[] split = dynamic_ores.split(";");
+            for (String str : split) {
+                if (str.isEmpty()) continue;
+                String[] parts = str.split(":");
+                if (parts.length >= 3) {
+                    try {
+                        int modeId = Integer.parseInt(parts[0]);
+                        String oreId = parts[1];
+                        int level = Integer.parseInt(parts[2]);
+                        unlockedOres.computeIfAbsent(modeId, k -> new HashMap<>()).put(oreId, level);
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+
 		PlayerData currentData = this.playerData.getOrDefault(uuid, null);
 		if(currentData != null) {
 			this.playerData.remove(currentData.getUUID());
 		}
-		this.playerData.put(uuid, new PlayerData(uuid, selectedTiers, purchasedTiers));
+		this.playerData.put(uuid, new PlayerData(uuid, unlockedOres));
 		return true;
 	}
 	
@@ -337,18 +318,15 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 				Connection connection = getConnection();
 				PreparedStatement stmt = null;
 
-				String selectedTiers = getSelectedTiersString(data);
-				String purchasedTiers = getPurchasedTiers(data);
+				String dynamicOres = getDynamicOresString(data);
 				try {
 					UUID uuid = data.getUUID();
-					stmt = connection.prepareStatement("UPDATE `" + TABLE_NAME +"` SET selected_tiers = ?, purchased_tiers = ?, pistons = ? WHERE uuid = ?");
-					stmt.setString(1, selectedTiers);
-					stmt.setString(2, purchasedTiers);
-					stmt.setString(3, getPistonString(uuid));
-					stmt.setString(4, uuid.toString());
+					stmt = connection.prepareStatement("UPDATE `" + TABLE_NAME +"` SET dynamic_ores = ?, pistons = ? WHERE uuid = ?");
+					stmt.setString(1, dynamicOres);
+					stmt.setString(2, getPistonString(uuid));
+					stmt.setString(3, uuid.toString());
 
 					if(stmt.executeUpdate() <= 0) {
-						//plugin.error("Failed to save player data for uuid " + uuid);
 						addToDatabase(data);
 					}
 

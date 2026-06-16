@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen.Requirements;
 
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Utils.StringUtils;
 import org.bukkit.Material;
@@ -62,18 +61,18 @@ public class ItemsRequirement implements Requirement{
 	}
 	
 	@Override
-	public List<String> addAvailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_ITEMS_AFFORD_TOP.toString(tier));
-		 for(Entry<Material, Integer> entry : tier.getPriceItems().entrySet()) {
+	public List<String> addAvailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_ITEMS_AFFORD_TOP.toString());
+		 for(Entry<Material, Integer> entry : this.getItemsNeeded().entrySet()) {
 			 lore.add(Lang.GUI_PRICE_ITEMS_AFFORD_LIST.toString(StringUtils.toCamelCase(entry.getKey().toString()), entry.getValue() + ""));
 		 }
 		return lore;
 	}
 
 	@Override
-	public List<String> addUnavailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_ITEMS_EXPENSIVE_TOP.toString(tier));
-		 for(Entry<Material, Integer> entry : tier.getPriceItems().entrySet()) {
+	public List<String> addUnavailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_ITEMS_EXPENSIVE_TOP.toString());
+		 for(Entry<Material, Integer> entry : this.getItemsNeeded().entrySet()) {
 			 lore.add(Lang.GUI_PRICE_ITEMS_EXPENSIVE_LIST.toString(StringUtils.toCamelCase(entry.getKey().toString()), entry.getValue() + ""));
 		 }
 		return lore;

@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen.Requirements;
 
-import fr.danakube.danacobblegen.API.Tier;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Hooks.IslandHook;
@@ -8,10 +7,6 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
-/**
- * CustomCobbleGen By @author Philip Flyvholm
- * LevelRequirement.java
- */
 public class LevelRequirement implements Requirement {
 
 	private final int levelNeeded;
@@ -45,14 +40,14 @@ public class LevelRequirement implements Requirement {
 	}
 
 	@Override
-	public List<String> addAvailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_LEVEL_ACHIEVED.toString(tier));
+	public List<String> addAvailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_LEVEL_ACHIEVED.toString());
 		return lore;
 	}
 
 	@Override
-	public List<String> addUnavailableString(Tier tier, List<String> lore) {
-		lore.add(Lang.GUI_PRICE_LEVEL_NOT_ACHIEVED.toString(tier));
+	public List<String> addUnavailableString(List<String> lore) {
+		lore.add(Lang.GUI_PRICE_LEVEL_NOT_ACHIEVED.toString());
 		return lore;
 	}
 
