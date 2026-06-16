@@ -120,7 +120,7 @@ dynamic-generator:
       DIAMOND_ORE:
         displayName: "&bDiamond Ore"
         icon: "DIAMOND_ORE"
-        slot: 4
+        slot: 13
         # Level 0 -> Unlock
         unlock:
           start-percentage: 1.0
