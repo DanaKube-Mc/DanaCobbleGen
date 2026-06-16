@@ -48,6 +48,7 @@ public class CustomCobbleGen extends JavaPlugin {
 
 	private static CustomCobbleGen plugin;
 	public Files lang;
+	public Files guiConfig;
 	private PlayerDatabase playerDatabase;
 	private FileConfiguration signsConfig;
 	private File signsConfigFile;
@@ -83,6 +84,10 @@ public class CustomCobbleGen extends JavaPlugin {
 		new LangFileUpdater(plugin);
 		Lang.setFile(lang);
 		this.debug("Lang is now setup&2 \u2713");
+		
+		// Setup GUI config
+		guiConfig = new Files(this, "gui.yml");
+		this.debug("GUI Config is now setup&2 \u2713");
 		// Setup dynamic generator
 		dynamicGeneratorManager.load();
 		this.debug("Dynamic Generator is now setup&2 \u2713");
@@ -248,6 +253,7 @@ public class CustomCobbleGen extends JavaPlugin {
 		this.reloadConfig();
 		Setting.setFile(this.getConfig());
 		this.lang.reload();
+		this.guiConfig.reload();
 		this.getPlayerDatabase().reloadConnection();
 		this.reloadSignsConfig();
 		generatorModeManager.loadFromConfig();

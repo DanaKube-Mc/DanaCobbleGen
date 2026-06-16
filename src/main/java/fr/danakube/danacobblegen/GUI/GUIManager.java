@@ -5,13 +5,13 @@ import fr.danakube.danacobblegen.API.DynamicOre;
 import fr.danakube.danacobblegen.API.OreUpgrade;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Lang;
-import fr.danakube.danacobblegen.Files.Setting;
 import fr.danakube.danacobblegen.Managers.DynamicGeneratorManager;
 import fr.danakube.danacobblegen.Requirements.Requirement;
 import fr.danakube.danacobblegen.Requirements.RequirementType;
 import fr.danakube.danacobblegen.Utils.ItemLib;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -22,7 +22,6 @@ import java.util.*;
 public class GUIManager {
 
 	private static GUIManager instance = null;
-	private final ItemStack backgroundItem = new ItemLib(XMaterial.GRAY_STAINED_GLASS_PANE.parseMaterial(), 1, (short) 7, " ").create();
 	private final DynamicGeneratorManager dgm = DynamicGeneratorManager.getInstance();
 	private final CustomCobbleGen plugin = CustomCobbleGen.getInstance();
 	
@@ -32,42 +31,65 @@ public class GUIManager {
 	}
 
 	public class MainGUI {
-		private final int guiSize = 54; // 6 rows
-		private final CustomHolder ch = new CustomHolder(guiSize, Lang.GUI_PREFIX.toString());
 		private final Player player;
-		private final int modeId = 0; // Option B: Direct to default generator
+		private final int modeId = 0; // Directly to default generator mode
+		private final CustomHolder ch;
+		private final int guiSize;
 
 		public MainGUI(Player p) {
 			player = p;
+			FileConfiguration guiConfig = plugin.guiConfig;
+
+			// Load GUI Settings
+			String title = ChatColor.translateAlternateColorCodes('&', guiConfig.getString("main-menu.title", "&3&lGenerator Upgrades"));
+			guiSize = guiConfig.getInt("main-menu.size", 54);
+			ch = new CustomHolder(guiSize, title);
+
 			Map<String, DynamicOre> modeOres = dgm.getDynamicOresByMode().getOrDefault(modeId, new HashMap<>());
+			List<Integer> oreSlots = guiConfig.getIntegerList("main-menu.ores.slots");
+			if (oreSlots.isEmpty()) {
+				// Default fallback
+				oreSlots = Arrays.asList(10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25);
+			}
+
+			int currentSlotIndex = 0;
 			
-			int slot = 10;
 			for (DynamicOre ore : modeOres.values()) {
-                // Ensure we don't go out of bounds
-                if (slot > 43) break;
-                if (slot % 9 == 8) slot += 2; // skip last col and first col of next row
+				if (currentSlotIndex >= oreSlots.size()) break; // No more slots available
+				int slot = oreSlots.get(currentSlotIndex);
 
 				int level = plugin.getPlayerDatabase().getPlayerData(p.getUniqueId()).getOreLevel(modeId, ore.getId());
 				ItemStack item = new ItemStack(ore.getIcon());
 				ItemMeta meta = item.getItemMeta();
 				meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', ore.getDisplayName()));
-				List<String> lore = new ArrayList<>();
-				lore.add(" ");
+
+				List<String> rawLore;
+				List<String> finalLore = new ArrayList<>();
+				Icon icon = null;
 
 				if (level < 0) {
 					// Locked
-					lore.add(ChatColor.RED + "Locked");
-					lore.add(ChatColor.GRAY + "Requirements to unlock:");
+					rawLore = guiConfig.getStringList("main-menu.ores.locked.lore");
+					List<String> requirementsLines = new ArrayList<>();
 					for (Requirement r : ore.getUnlockRequirements()) {
 						if (r.getRequirementType() == RequirementType.MONEY) {
-							lore.add(ChatColor.YELLOW + "$ " + r.getRequirementValue());
+							requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&e$ " + r.getRequirementValue()));
 						} else if (r.getRequirementType() == RequirementType.XP) {
-							lore.add(ChatColor.GREEN + "" + r.getRequirementValue() + " XP Levels");
+							requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&a" + r.getRequirementValue() + " XP Levels"));
 						}
 					}
-					meta.setLore(lore);
+
+					for (String line : rawLore) {
+						if (line.contains("%requirements%")) {
+							finalLore.addAll(requirementsLines);
+						} else {
+							finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+						}
+					}
+
+					meta.setLore(finalLore);
 					item.setItemMeta(meta);
-					Icon icon = new Icon(item);
+					icon = new Icon(item);
 					icon.addClickAction(player1 -> {
 						boolean canAfford = true;
 						for (Requirement r : ore.getUnlockRequirements()) {
@@ -85,7 +107,7 @@ public class GUIManager {
 							player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
 						}
 					});
-					ch.setIcon(slot, icon);
+
 				} else {
 					// Unlocked
 					double currentPercentage = ore.getStartPercentage();
@@ -93,32 +115,45 @@ public class GUIManager {
 						OreUpgrade currentUpgrade = ore.getUpgrade(level);
 						if (currentUpgrade != null) currentPercentage = currentUpgrade.getPercentage();
 					}
-					lore.add(ChatColor.GREEN + "Unlocked");
-					lore.add(ChatColor.GRAY + "Current Level: " + ChatColor.AQUA + level);
-					lore.add(ChatColor.GRAY + "Current Percentage: " + ChatColor.AQUA + currentPercentage + "%");
-					
+
 					OreUpgrade nextUpgrade = ore.getUpgrade(level + 1);
 					if (nextUpgrade == null) {
-						lore.add(" ");
-						lore.add(ChatColor.YELLOW + "" + ChatColor.BOLD + "MAX LEVEL");
-						meta.setLore(lore);
+						// Max Level
+						rawLore = guiConfig.getStringList("main-menu.ores.max-level.lore");
+						for (String line : rawLore) {
+							line = line.replace("%level%", String.valueOf(level));
+							line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
+							finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+						}
+						meta.setLore(finalLore);
 						item.setItemMeta(meta);
-						Icon icon = new Icon(item);
-						ch.setIcon(slot, icon);
+						icon = new Icon(item);
 					} else {
-						lore.add(" ");
-						lore.add(ChatColor.GRAY + "Next Level Percentage: " + ChatColor.AQUA + nextUpgrade.getPercentage() + "%");
-						lore.add(ChatColor.GRAY + "Requirements to upgrade:");
+						// Upgradable
+						rawLore = guiConfig.getStringList("main-menu.ores.unlocked.lore");
+						List<String> requirementsLines = new ArrayList<>();
 						for (Requirement r : nextUpgrade.getRequirements()) {
 							if (r.getRequirementType() == RequirementType.MONEY) {
-								lore.add(ChatColor.YELLOW + "$ " + r.getRequirementValue());
+								requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&e$ " + r.getRequirementValue()));
 							} else if (r.getRequirementType() == RequirementType.XP) {
-								lore.add(ChatColor.GREEN + "" + r.getRequirementValue() + " XP Levels");
+								requirementsLines.add(ChatColor.translateAlternateColorCodes('&', "&a" + r.getRequirementValue() + " XP Levels"));
 							}
 						}
-						meta.setLore(lore);
+
+						for (String line : rawLore) {
+							if (line.contains("%requirements%")) {
+								finalLore.addAll(requirementsLines);
+							} else {
+								line = line.replace("%level%", String.valueOf(level));
+								line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
+								line = line.replace("%next_percentage%", String.valueOf(nextUpgrade.getPercentage()));
+								finalLore.add(ChatColor.translateAlternateColorCodes('&', line));
+							}
+						}
+						
+						meta.setLore(finalLore);
 						item.setItemMeta(meta);
-						Icon icon = new Icon(item);
+						icon = new Icon(item);
 						icon.addClickAction(player1 -> {
 							boolean canAfford = true;
 							for (Requirement r : nextUpgrade.getRequirements()) {
@@ -136,30 +171,51 @@ public class GUIManager {
 								player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
 							}
 						});
-						ch.setIcon(slot, icon);
 					}
 				}
-				slot++;
+				ch.setIcon(slot, icon);
+				currentSlotIndex++;
 			}
 
-			// Add buffer and total stats item
-			ItemStack statsItem = new ItemStack(Material.BOOK);
-			ItemMeta statsMeta = statsItem.getItemMeta();
-			statsMeta.setDisplayName(ChatColor.GOLD + "Generator Stats");
-			List<String> statsLore = new ArrayList<>();
-			Map<Material, Double> rates = dgm.getRatesForPlayer(p.getUniqueId(), modeId);
-			statsLore.add(" ");
-			statsLore.add(ChatColor.GRAY + "Current Generation Rates:");
-			for (Map.Entry<Material, Double> entry : rates.entrySet()) {
-				statsLore.add(ChatColor.YELLOW + " - " + entry.getKey().name() + ": " + String.format("%.2f", entry.getValue()) + "%");
-			}
-			statsMeta.setLore(statsLore);
-			statsItem.setItemMeta(statsMeta);
-			ch.setIcon(4, new Icon(statsItem));
+			// Add Stats Item
+			if (guiConfig.getBoolean("main-menu.stats-item.enabled", true)) {
+				int statsSlot = guiConfig.getInt("main-menu.stats-item.slot", 4);
+				Material statsMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.stats-item.material", "BOOK")).orElse(XMaterial.BOOK).parseMaterial();
+				ItemStack statsItem = new ItemStack(statsMat != null ? statsMat : Material.BOOK);
+				ItemMeta statsMeta = statsItem.getItemMeta();
+				statsMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', guiConfig.getString("main-menu.stats-item.name", "&6Generator Stats")));
+				
+				List<String> rawStatsLore = guiConfig.getStringList("main-menu.stats-item.lore");
+				List<String> finalStatsLore = new ArrayList<>();
+				Map<Material, Double> rates = dgm.getRatesForPlayer(p.getUniqueId(), modeId);
+				
+				List<String> ratesLines = new ArrayList<>();
+				for (Map.Entry<Material, Double> entry : rates.entrySet()) {
+					ratesLines.add(ChatColor.YELLOW + " - " + entry.getKey().name() + ": " + String.format(Locale.US, "%.2f", entry.getValue()) + "%");
+				}
 
-			for (int i = 0; i < guiSize; i++) {
-				if (ch.getIcon(i) == null) {
-					ch.setIcon(i, new Icon(backgroundItem));
+				for (String line : rawStatsLore) {
+					if (line.contains("%rates%")) {
+						finalStatsLore.addAll(ratesLines);
+					} else {
+						finalStatsLore.add(ChatColor.translateAlternateColorCodes('&', line));
+					}
+				}
+				statsMeta.setLore(finalStatsLore);
+				statsItem.setItemMeta(statsMeta);
+				ch.setIcon(statsSlot, new Icon(statsItem));
+			}
+
+			// Add Filler Background
+			if (guiConfig.getBoolean("main-menu.filler.enabled", true)) {
+				Material fillerMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.filler.material", "GRAY_STAINED_GLASS_PANE")).orElse(XMaterial.GRAY_STAINED_GLASS_PANE).parseMaterial();
+				String fillerName = ChatColor.translateAlternateColorCodes('&', guiConfig.getString("main-menu.filler.name", " "));
+				ItemStack backgroundItem = new ItemLib(fillerMat != null ? fillerMat : Material.STONE, 1, (short) 7, fillerName).create();
+				List<Integer> fillerSlots = guiConfig.getIntegerList("main-menu.filler.slots");
+				for (int i : fillerSlots) {
+					if (i >= 0 && i < guiSize && ch.getIcon(i) == null) {
+						ch.setIcon(i, new Icon(backgroundItem));
+					}
 				}
 			}
 		}

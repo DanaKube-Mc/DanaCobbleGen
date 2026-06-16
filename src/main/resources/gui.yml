@@ -1,0 +1,55 @@
+# ==============================================================================
+# CustomCobbleGen GUI Configuration
+# ==============================================================================
+# Here you can customize the main generator GUI to your liking.
+# ==============================================================================
+
+main-menu:
+  title: "&3&lGenerator Upgrades"
+  size: 54
+  
+  filler:
+    enabled: true
+    material: "GRAY_STAINED_GLASS_PANE"
+    name: " "
+    slots: [0, 1, 2, 3, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+    
+  stats-item:
+    enabled: true
+    slot: 4
+    material: "BOOK"
+    name: "&6Generator Stats"
+    lore:
+      - " "
+      - "&7Current Generation Rates:"
+      - "%rates%" # Will be replaced by each ore's percentage
+
+  ores:
+    slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25]
+    
+    locked:
+      lore:
+        - " "
+        - "&c&lLocked"
+        - "&7Requirements to unlock:"
+        - "%requirements%"
+        
+    unlocked:
+      lore:
+        - " "
+        - "&a&lUnlocked"
+        - "&7Current Level: &b%level%"
+        - "&7Current Percentage: &b%current_percentage%%"
+        - " "
+        - "&7Next Level Percentage: &b%next_percentage%%"
+        - "&7Requirements to upgrade:"
+        - "%requirements%"
+        
+    max-level:
+      lore:
+        - " "
+        - "&a&lUnlocked"
+        - "&7Current Level: &b%level%"
+        - "&7Current Percentage: &b%current_percentage%%"
+        - " "
+        - "&e&lMAX LEVEL"
