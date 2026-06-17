@@ -211,7 +211,12 @@ public class MainCommand implements CommandExecutor{
 				}
 				String oreId = args[4].toUpperCase();
 				
-				fr.danakube.danacobblegen.databases.PlayerData data = plugin.getPlayerDatabase().getPlayerData(target.getUniqueId());
+				UUID targetUuid = target.getUniqueId();
+				if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_USEPERISLANDUNLOCKEDGENERATORS.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+					targetUuid = plugin.getIslandHook().getIslandLeaderFromPlayer(targetUuid);
+				}
+				
+				fr.danakube.danacobblegen.databases.PlayerData data = plugin.getPlayerDatabase().getPlayerData(targetUuid);
 				if (data == null) {
 					sender.sendMessage(Lang.PREFIX.toString() + Lang.ADMIN_LEVEL_DATA_NOT_FOUND.toString());
 					return true;

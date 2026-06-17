@@ -40,6 +40,20 @@ public class GUIManager {
 			player = p;
 			FileConfiguration guiConfig = plugin.guiConfig;
 
+			UUID targetUuid = p.getUniqueId();
+			if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_USEPERISLANDUNLOCKEDGENERATORS.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+				targetUuid = plugin.getIslandHook().getIslandLeaderFromPlayer(targetUuid);
+			}
+			final UUID finalTargetUuid = targetUuid;
+
+			boolean canBuy = true;
+			if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_ONLYOWNER_BUY.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+				if (!plugin.getIslandHook().isPlayerLeader(p.getUniqueId())) {
+					canBuy = false;
+				}
+			}
+			final boolean finalCanBuy = canBuy;
+
 			// Load GUI Settings
 			String title = Lang.color(guiConfig.getString("main-menu.title", "&3&lGenerator Upgrades"));
 			guiSize = guiConfig.getInt("main-menu.size", 54);
@@ -73,7 +87,7 @@ public class GUIManager {
 					currentSlotIndex++;
 				}
 
-				int level = plugin.getPlayerDatabase().getPlayerData(p.getUniqueId()).getOreLevel(modeId, ore.getId());
+				int level = plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).getOreLevel(modeId, ore.getId());
 				ItemStack item = ore.getIconItem();
 				ItemMeta meta = item.getItemMeta();
 				meta.setDisplayName(Lang.color(ore.getDisplayName()));
@@ -104,6 +118,10 @@ public class GUIManager {
 					item.setItemMeta(meta);
 					icon = new Icon(item);
 					icon.addClickAction(player1 -> {
+						if (!finalCanBuy) {
+							player1.sendMessage(Lang.PREFIX.toString() + ChatColor.RED + "Only the island owner can buy upgrades!");
+							return;
+						}
 						boolean canAfford = true;
 						for (Requirement r : ore.getUnlockRequirements()) {
 							if (!r.furfillsRequirement(player1)) {
@@ -113,8 +131,15 @@ public class GUIManager {
 						}
 						if (canAfford) {
 							for (Requirement r : ore.getUnlockRequirements()) r.onPurchase(player1);
-							plugin.getPlayerDatabase().getPlayerData(player1.getUniqueId()).setOreLevel(modeId, ore.getId(), 0);
-							player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have unlocked " + Lang.color(ore.getDisplayName()) + "!");
+							plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).setOreLevel(modeId, ore.getId(), 0);
+							if (fr.danakube.danacobblegen.Files.Setting.SAVEONTIERPURCHASE.getBoolean()) {
+								plugin.getPlayerDatabase().saveToDatabase(finalTargetUuid, true);
+							}
+							if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_SENDMESSAGESTOTEAM.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+								plugin.getIslandHook().sendMessageToIslandMembers(Lang.PREFIX.toString() + ChatColor.GREEN + player1.getName() + " has unlocked " + Lang.color(ore.getDisplayName()) + "!", finalTargetUuid);
+							} else {
+								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have unlocked " + Lang.color(ore.getDisplayName()) + "!");
+							}
 							new MainGUI(player1).open();
 						} else {
 							player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
@@ -166,6 +191,10 @@ public class GUIManager {
 						item.setItemMeta(meta);
 						icon = new Icon(item);
 						icon.addClickAction(player1 -> {
+							if (!finalCanBuy) {
+								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.RED + "Only the island owner can buy upgrades!");
+								return;
+							}
 							boolean canAfford = true;
 							for (Requirement r : nextUpgrade.getRequirements()) {
 								if (!r.furfillsRequirement(player1)) {
@@ -175,8 +204,15 @@ public class GUIManager {
 							}
 							if (canAfford) {
 								for (Requirement r : nextUpgrade.getRequirements()) r.onPurchase(player1);
-								plugin.getPlayerDatabase().getPlayerData(player1.getUniqueId()).setOreLevel(modeId, ore.getId(), level + 1);
-								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have upgraded " + Lang.color(ore.getDisplayName()) + "!");
+								plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).setOreLevel(modeId, ore.getId(), level + 1);
+								if (fr.danakube.danacobblegen.Files.Setting.SAVEONTIERPURCHASE.getBoolean()) {
+									plugin.getPlayerDatabase().saveToDatabase(finalTargetUuid, true);
+								}
+								if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_SENDMESSAGESTOTEAM.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+									plugin.getIslandHook().sendMessageToIslandMembers(Lang.PREFIX.toString() + ChatColor.GREEN + player1.getName() + " has upgraded " + Lang.color(ore.getDisplayName()) + "!", finalTargetUuid);
+								} else {
+									player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have upgraded " + Lang.color(ore.getDisplayName()) + "!");
+								}
 								new MainGUI(player1).open();
 							} else {
 								player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
