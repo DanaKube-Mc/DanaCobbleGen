@@ -154,6 +154,10 @@ public class DynamicGeneratorManager {
 	}
 
 	public Map<Material, Double> getRatesForPlayer(UUID uuid, int modeId) {
+		if (Setting.ISLANDS_USEPERISLANDUNLOCKEDGENERATORS.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+			uuid = plugin.getIslandHook().getIslandLeaderFromPlayer(uuid);
+		}
+
 		PlayerData data = plugin.getPlayerDatabase().getPlayerData(uuid);
 		Map<Material, Double> defaultRates = defaultRatesByMode.getOrDefault(modeId, new HashMap<>());
 		if (data == null) {

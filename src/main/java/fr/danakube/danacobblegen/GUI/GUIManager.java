@@ -6,7 +6,6 @@ import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Managers.DynamicGeneratorManager;
 import fr.danakube.danacobblegen.Requirements.Requirement;
-import fr.danakube.danacobblegen.Requirements.RequirementType;
 import fr.danakube.danacobblegen.Utils.ItemLib;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -37,6 +36,20 @@ public class GUIManager {
 		public MainGUI(Player p) {
 			player = p;
 			FileConfiguration guiConfig = plugin.guiConfig;
+
+			UUID targetUuid = p.getUniqueId();
+			if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_USEPERISLANDUNLOCKEDGENERATORS.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+				targetUuid = plugin.getIslandHook().getIslandLeaderFromPlayer(targetUuid);
+			}
+			final UUID finalTargetUuid = targetUuid;
+
+			boolean canBuy = true;
+			if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_ONLYOWNER_BUY.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+				if (!plugin.getIslandHook().isPlayerLeader(p.getUniqueId())) {
+					canBuy = false;
+				}
+			}
+			final boolean finalCanBuy = canBuy;
 
 			// Load GUI Settings
 			String title = Lang.color(guiConfig.getString("main-menu.title", "&3&lGenerator Upgrades"));
@@ -71,7 +84,7 @@ public class GUIManager {
 					currentSlotIndex++;
 				}
 
-				int level = plugin.getPlayerDatabase().getPlayerData(p.getUniqueId()).getOreLevel(modeId, ore.getId());
+				int level = plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).getOreLevel(modeId, ore.getId());
 				ItemStack item = ore.getIconItem();
 				ItemMeta meta = item.getItemMeta();
 				meta.displayName(Lang.component(ore.getDisplayName()));
@@ -85,16 +98,14 @@ public class GUIManager {
 					rawLore = guiConfig.getStringList("main-menu.ores.locked.lore");
 					List<String> requirementsLines = new ArrayList<>();
 					for (Requirement r : ore.getUnlockRequirements()) {
-						if (r.getRequirementType() == RequirementType.MONEY) {
-							requirementsLines.add(Lang.color("&e$ " + r.getRequirementValue()));
-						} else if (r.getRequirementType() == RequirementType.XP) {
-							requirementsLines.add(Lang.color("&a" + r.getRequirementValue() + " XP Levels"));
-						}
+						requirementsLines.add(String.valueOf(r.getRequirementValue()));
 					}
 
 					for (String line : rawLore) {
 						if (line.contains("%requirements%")) {
-							finalLore.addAll(requirementsLines);
+							for (String req : requirementsLines) {
+								finalLore.add(Lang.color(line.replace("%requirements%", req)));
+							}
 						} else {
 							finalLore.add(Lang.color(line));
 						}
@@ -104,6 +115,10 @@ public class GUIManager {
 					item.setItemMeta(meta);
 					icon = new Icon(item);
 					icon.addClickAction(player1 -> {
+						if (!finalCanBuy) {
+							player1.sendMessage(Lang.component(Lang.PREFIX + "&cOnly the island owner can buy upgrades!"));
+							return;
+						}
 						boolean canAfford = true;
 						for (Requirement r : ore.getUnlockRequirements()) {
 							if (!r.furfillsRequirement(player1)) {
@@ -113,8 +128,15 @@ public class GUIManager {
 						}
 						if (canAfford) {
 							for (Requirement r : ore.getUnlockRequirements()) r.onPurchase(player1);
-							plugin.getPlayerDatabase().getPlayerData(player1.getUniqueId()).setOreLevel(modeId, ore.getId(), 0);
-							player1.sendMessage(Lang.component(Lang.PREFIX + "&aYou have unlocked " + ore.getDisplayName() + "!"));
+							plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).setOreLevel(modeId, ore.getId(), 0);
+							if (fr.danakube.danacobblegen.Files.Setting.SAVEONTIERPURCHASE.getBoolean()) {
+								plugin.getPlayerDatabase().saveToDatabase(finalTargetUuid, true);
+							}
+							if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_SENDMESSAGESTOTEAM.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+								plugin.getIslandHook().sendMessageToIslandMembers(Lang.color(Lang.PREFIX + "&a" + player1.getName() + " has unlocked " + ore.getDisplayName() + "!"), finalTargetUuid);
+							} else {
+								player1.sendMessage(Lang.component(Lang.PREFIX + "&aYou have unlocked " + ore.getDisplayName() + "!"));
+							}
 							new MainGUI(player1).open();
 						} else {
 							player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
@@ -146,16 +168,14 @@ public class GUIManager {
 						rawLore = guiConfig.getStringList("main-menu.ores.unlocked.lore");
 						List<String> requirementsLines = new ArrayList<>();
 						for (Requirement r : nextUpgrade.getRequirements()) {
-							if (r.getRequirementType() == RequirementType.MONEY) {
-								requirementsLines.add(Lang.color("&e$ " + r.getRequirementValue()));
-							} else if (r.getRequirementType() == RequirementType.XP) {
-								requirementsLines.add(Lang.color("&a" + r.getRequirementValue() + " XP Levels"));
-							}
+							requirementsLines.add(String.valueOf(r.getRequirementValue()));
 						}
 
 						for (String line : rawLore) {
 							if (line.contains("%requirements%")) {
-								finalLore.addAll(requirementsLines);
+								for (String req : requirementsLines) {
+									finalLore.add(Lang.color(line.replace("%requirements%", req)));
+								}
 							} else {
 								line = line.replace("%level%", String.valueOf(level));
 								line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
@@ -168,6 +188,10 @@ public class GUIManager {
 						item.setItemMeta(meta);
 						icon = new Icon(item);
 						icon.addClickAction(player1 -> {
+							if (!finalCanBuy) {
+								player1.sendMessage(Lang.component(Lang.PREFIX + "&cOnly the island owner can buy upgrades!"));
+								return;
+							}
 							boolean canAfford = true;
 							for (Requirement r : nextUpgrade.getRequirements()) {
 								if (!r.furfillsRequirement(player1)) {
@@ -177,8 +201,15 @@ public class GUIManager {
 							}
 							if (canAfford) {
 								for (Requirement r : nextUpgrade.getRequirements()) r.onPurchase(player1);
-								plugin.getPlayerDatabase().getPlayerData(player1.getUniqueId()).setOreLevel(modeId, ore.getId(), level + 1);
-								player1.sendMessage(Lang.component(Lang.PREFIX + "&aYou have upgraded " + ore.getDisplayName() + "!"));
+								plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).setOreLevel(modeId, ore.getId(), level + 1);
+								if (fr.danakube.danacobblegen.Files.Setting.SAVEONTIERPURCHASE.getBoolean()) {
+									plugin.getPlayerDatabase().saveToDatabase(finalTargetUuid, true);
+								}
+								if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_SENDMESSAGESTOTEAM.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+									plugin.getIslandHook().sendMessageToIslandMembers(Lang.color(Lang.PREFIX + "&a" + player1.getName() + " has upgraded " + ore.getDisplayName() + "!"), finalTargetUuid);
+								} else {
+									player1.sendMessage(Lang.component(Lang.PREFIX + "&aYou have upgraded " + ore.getDisplayName() + "!"));
+								}
 								new MainGUI(player1).open();
 							} else {
 								player1.sendMessage(Lang.PREFIX.toString() + Lang.GUI_CAN_NOT_AFFORD.toString());
@@ -209,9 +240,13 @@ public class GUIManager {
 				List<String> finalStatsLore = new ArrayList<>();
 				Map<Material, Double> rates = dgm.getRatesForPlayer(p.getUniqueId(), modeId);
 				
+				String rateFormat = guiConfig.getString("main-menu.stats-item.rates-format", "&e - %material%: %percentage%%");
 				List<String> ratesLines = new ArrayList<>();
 				for (Map.Entry<Material, Double> entry : rates.entrySet()) {
-					ratesLines.add("&e - " + entry.getKey().name() + ": " + String.format(Locale.US, "%.2f", entry.getValue()) + "%");
+					String line = rateFormat
+							.replace("%material%", entry.getKey().name())
+							.replace("%percentage%", String.format(Locale.US, "%.2f", entry.getValue()));
+					ratesLines.add(Lang.color(line));
 				}
 
 				for (String line : rawStatsLore) {

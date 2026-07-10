@@ -50,6 +50,9 @@ public class TierPlaceholderExpansion extends PlaceholderExpansion {
             return "";
         }
         UUID uuid = player.getUniqueId();
+		if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_USEPERISLANDUNLOCKEDGENERATORS.getBoolean() && plugin.isConnectedToIslandPlugin()) {
+			uuid = plugin.getIslandHook().getIslandLeaderFromPlayer(uuid);
+		}
 		
 		String[] identifiers = identifier.split("_");
 		
