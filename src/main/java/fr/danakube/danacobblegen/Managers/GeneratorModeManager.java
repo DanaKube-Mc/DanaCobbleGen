@@ -7,10 +7,8 @@ package fr.danakube.danacobblegen.Managers;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Setting;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.Particle;
 
 import java.util.*;
 

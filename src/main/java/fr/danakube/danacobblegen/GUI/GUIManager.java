@@ -1,15 +1,12 @@
 package fr.danakube.danacobblegen.GUI;
 
-import com.cryptomorin.xseries.XMaterial;
 import fr.danakube.danacobblegen.API.DynamicOre;
 import fr.danakube.danacobblegen.API.OreUpgrade;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Managers.DynamicGeneratorManager;
 import fr.danakube.danacobblegen.Requirements.Requirement;
-import fr.danakube.danacobblegen.Requirements.RequirementType;
 import fr.danakube.danacobblegen.Utils.ItemLib;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -90,7 +87,7 @@ public class GUIManager {
 				int level = plugin.getPlayerDatabase().getPlayerData(finalTargetUuid).getOreLevel(modeId, ore.getId());
 				ItemStack item = ore.getIconItem();
 				ItemMeta meta = item.getItemMeta();
-				meta.setDisplayName(Lang.color(ore.getDisplayName()));
+				meta.displayName(Lang.component(ore.getDisplayName()));
 
 				List<String> rawLore;
 				List<String> finalLore = new ArrayList<>();
@@ -114,12 +111,12 @@ public class GUIManager {
 						}
 					}
 
-					meta.setLore(finalLore);
+					meta.lore(Lang.componentList(finalLore));
 					item.setItemMeta(meta);
 					icon = new Icon(item);
 					icon.addClickAction(player1 -> {
 						if (!finalCanBuy) {
-							player1.sendMessage(Lang.PREFIX.toString() + ChatColor.RED + "Only the island owner can buy upgrades!");
+							player1.sendMessage(Lang.component(Lang.PREFIX + "&cOnly the island owner can buy upgrades!"));
 							return;
 						}
 						boolean canAfford = true;
@@ -136,9 +133,9 @@ public class GUIManager {
 								plugin.getPlayerDatabase().saveToDatabase(finalTargetUuid, true);
 							}
 							if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_SENDMESSAGESTOTEAM.getBoolean() && plugin.isConnectedToIslandPlugin()) {
-								plugin.getIslandHook().sendMessageToIslandMembers(Lang.PREFIX.toString() + ChatColor.GREEN + player1.getName() + " has unlocked " + Lang.color(ore.getDisplayName()) + "!", finalTargetUuid);
+								plugin.getIslandHook().sendMessageToIslandMembers(Lang.color(Lang.PREFIX + "&a" + player1.getName() + " has unlocked " + ore.getDisplayName() + "!"), finalTargetUuid);
 							} else {
-								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have unlocked " + Lang.color(ore.getDisplayName()) + "!");
+								player1.sendMessage(Lang.component(Lang.PREFIX + "&aYou have unlocked " + ore.getDisplayName() + "!"));
 							}
 							new MainGUI(player1).open();
 						} else {
@@ -163,7 +160,7 @@ public class GUIManager {
 							line = line.replace("%current_percentage%", String.valueOf(currentPercentage));
 							finalLore.add(Lang.color(line));
 						}
-						meta.setLore(finalLore);
+						meta.lore(Lang.componentList(finalLore));
 						item.setItemMeta(meta);
 						icon = new Icon(item);
 					} else {
@@ -187,12 +184,12 @@ public class GUIManager {
 							}
 						}
 						
-						meta.setLore(finalLore);
+						meta.lore(Lang.componentList(finalLore));
 						item.setItemMeta(meta);
 						icon = new Icon(item);
 						icon.addClickAction(player1 -> {
 							if (!finalCanBuy) {
-								player1.sendMessage(Lang.PREFIX.toString() + ChatColor.RED + "Only the island owner can buy upgrades!");
+								player1.sendMessage(Lang.component(Lang.PREFIX + "&cOnly the island owner can buy upgrades!"));
 								return;
 							}
 							boolean canAfford = true;
@@ -209,9 +206,9 @@ public class GUIManager {
 									plugin.getPlayerDatabase().saveToDatabase(finalTargetUuid, true);
 								}
 								if (fr.danakube.danacobblegen.Files.Setting.ISLANDS_SENDMESSAGESTOTEAM.getBoolean() && plugin.isConnectedToIslandPlugin()) {
-									plugin.getIslandHook().sendMessageToIslandMembers(Lang.PREFIX.toString() + ChatColor.GREEN + player1.getName() + " has upgraded " + Lang.color(ore.getDisplayName()) + "!", finalTargetUuid);
+									plugin.getIslandHook().sendMessageToIslandMembers(Lang.color(Lang.PREFIX + "&a" + player1.getName() + " has upgraded " + ore.getDisplayName() + "!"), finalTargetUuid);
 								} else {
-									player1.sendMessage(Lang.PREFIX.toString() + ChatColor.GREEN + "You have upgraded " + Lang.color(ore.getDisplayName()) + "!");
+									player1.sendMessage(Lang.component(Lang.PREFIX + "&aYou have upgraded " + ore.getDisplayName() + "!"));
 								}
 								new MainGUI(player1).open();
 							} else {
@@ -227,8 +224,9 @@ public class GUIManager {
 			// Add Stats Item
 			if (guiConfig.getBoolean("main-menu.stats-item.enabled", true)) {
 				int statsSlot = guiConfig.getInt("main-menu.stats-item.slot", 4);
-				Material statsMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.stats-item.material", "BOOK")).orElse(XMaterial.BOOK).parseMaterial();
-				ItemStack statsItem = new ItemStack(statsMat != null ? statsMat : Material.BOOK);
+				Material statsMat = Material.matchMaterial(guiConfig.getString("main-menu.stats-item.material", "BOOK"));
+				if (statsMat == null) statsMat = Material.BOOK;
+				ItemStack statsItem = new ItemStack(statsMat);
 				if (statsMat == Material.PLAYER_HEAD) {
 					String skullTexture = guiConfig.getString("main-menu.stats-item.skin", guiConfig.getString("main-menu.stats-item.skull", null));
 					if (skullTexture != null && !skullTexture.isEmpty()) {
@@ -236,7 +234,7 @@ public class GUIManager {
 					}
 				}
 				ItemMeta statsMeta = statsItem.getItemMeta();
-				statsMeta.setDisplayName(Lang.color(guiConfig.getString("main-menu.stats-item.name", "&6Generator Stats")));
+				statsMeta.displayName(Lang.component(guiConfig.getString("main-menu.stats-item.name", "&6Generator Stats")));
 				
 				List<String> rawStatsLore = guiConfig.getStringList("main-menu.stats-item.lore");
 				List<String> finalStatsLore = new ArrayList<>();
@@ -258,14 +256,15 @@ public class GUIManager {
 						finalStatsLore.add(Lang.color(line));
 					}
 				}
-				statsMeta.setLore(finalStatsLore);
+				statsMeta.lore(Lang.componentList(finalStatsLore));
 				statsItem.setItemMeta(statsMeta);
 				ch.setIcon(statsSlot, new Icon(statsItem));
 			}
 
 			// Add Filler Background
 			if (guiConfig.getBoolean("main-menu.filler.enabled", true)) {
-				Material fillerMat = XMaterial.matchXMaterial(guiConfig.getString("main-menu.filler.material", "GRAY_STAINED_GLASS_PANE")).orElse(XMaterial.GRAY_STAINED_GLASS_PANE).parseMaterial();
+				Material fillerMat = Material.matchMaterial(guiConfig.getString("main-menu.filler.material", "GRAY_STAINED_GLASS_PANE"));
+				if (fillerMat == null) fillerMat = Material.GRAY_STAINED_GLASS_PANE;
 				String fillerName = Lang.color(guiConfig.getString("main-menu.filler.name", " "));
 				ItemStack backgroundItem;
 				if (fillerMat == Material.PLAYER_HEAD) {
@@ -274,7 +273,7 @@ public class GUIManager {
 						backgroundItem = com.cryptomorin.xseries.profiles.builder.XSkull.createItem().profile(com.cryptomorin.xseries.profiles.objects.Profileable.detect(skullTexture)).apply();
 						ItemMeta bm = backgroundItem.getItemMeta();
 						if (bm != null) {
-							bm.setDisplayName(fillerName);
+							bm.displayName(Lang.component(fillerName));
 							backgroundItem.setItemMeta(bm);
 						}
 					} else {

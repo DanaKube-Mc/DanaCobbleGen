@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen;
 
-import com.cryptomorin.xseries.XMaterial;
 import fr.danakube.danacobblegen.Commands.MainCommand;
 import fr.danakube.danacobblegen.Commands.MainTabComplete;
 import fr.danakube.danacobblegen.Events.BlockEvents;
@@ -21,20 +20,15 @@ import fr.danakube.danacobblegen.Utils.TierPlaceholderExpansion;
 import fr.danakube.danacobblegen.databases.MySQLPlayerDatabase;
 import fr.danakube.danacobblegen.databases.PlayerDatabase;
 import fr.danakube.danacobblegen.databases.YamlPlayerDatabase;
-import net.milkbowl.vault.chat.Chat;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

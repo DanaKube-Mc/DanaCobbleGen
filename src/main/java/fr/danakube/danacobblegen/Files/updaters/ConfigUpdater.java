@@ -1,25 +1,22 @@
 package fr.danakube.danacobblegen.Files.updaters;
 
-import com.cryptomorin.xseries.XMaterial;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Setting;
-import org.bukkit.configuration.ConfigurationSection;
+import io.papermc.paper.plugin.configuration.PluginMeta;
+
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.PluginDescriptionFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ConfigUpdater extends YamlConfiguration {
 
 	public ConfigUpdater() {
 		CustomCobbleGen plugin = CustomCobbleGen.getInstance();
-		PluginDescriptionFile pluginYml = plugin.getDescription();
+		PluginMeta pluginMeta = plugin.getPluginMeta();
 
 		FileConfiguration config = plugin.getConfig();
-		config.options().setHeader(List.of(pluginYml.getName() + "! Version: " + pluginYml.getVersion() + " By " + pluginYml.getAuthors().get(0)));
+		config.options().setHeader(List.of(pluginMeta.getName() + "! Version: " + pluginMeta.getVersion() + " By " + (pluginMeta.getAuthors().isEmpty() ? "Phil14052" : pluginMeta.getAuthors().get(0))));
 		if(!Setting.isConfigSet()) Setting.setFile(config);
 		for(Setting setting : Setting.values()) {
 			if(setting.isSection()) continue; //SECTIONS ARE FOR REFERENCE ONLY

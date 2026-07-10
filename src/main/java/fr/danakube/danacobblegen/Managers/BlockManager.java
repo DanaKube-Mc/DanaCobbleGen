@@ -1,8 +1,8 @@
 
 package fr.danakube.danacobblegen.Managers;
 
-import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.Location;
+import org.bukkit.Material;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -83,7 +83,7 @@ public class BlockManager {
 		for (Entry<Location, GenPiston> entry : entrySet) {
 			GenPiston piston = entry.getValue();
 			piston.getLoc().getBlock();
-			if(piston.getLoc().getBlock().getType() == XMaterial.PISTON.parseMaterial()) {
+			if(piston.getLoc().getBlock().getType() == Material.PISTON) {
 				expiredPistons.add(piston);
 				continue;
 			}

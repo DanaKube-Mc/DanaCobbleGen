@@ -49,7 +49,7 @@ public class FileUploader {
         String raw = sb.toString();
 		URL url = null;
 		try {
-			url = new URL("https://pastebin.com/api/api_post.php");
+			url = java.net.URI.create("https://pastebin.com/api/api_post.php").toURL();
 		} catch (MalformedURLException e1) {
 			plugin.error("Plugin error - REPORT THIS TO THE DEV!: https://pastebin.com/api/api_post.php is not a valid error. Occurred in FileUploader#pastebinUpload");
 		}
@@ -65,7 +65,7 @@ public class FileUploader {
          	parameters.put("api_option", "paste");
          	parameters.put("api_user_key", "");
          	parameters.put("api_paste_private", "1");
-         	parameters.put("api_paste_name", Arrays.toString(fileNames) + " for " + plugin.getDescription().getName() + " v" + plugin.getDescription().getVersion());
+          	parameters.put("api_paste_name", Arrays.toString(fileNames) + " for " + plugin.getPluginMeta().getName() + " v" + plugin.getPluginMeta().getVersion());
 			Dotenv dotenv = Dotenv.load();
 			String APIKey = dotenv.get("PASTEBIN_API", null);
 			if(APIKey == null){

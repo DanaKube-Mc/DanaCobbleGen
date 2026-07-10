@@ -4,12 +4,10 @@
  */
 package fr.danakube.danacobblegen.Events;
 
-import com.cryptomorin.xseries.XMaterial;
 import fr.danakube.danacobblegen.API.GeneratorGenerateEvent;
 import fr.danakube.danacobblegen.API.PlayerBreakGeneratedBlock;
 
 import fr.danakube.danacobblegen.CustomCobbleGen;
-import fr.danakube.danacobblegen.Files.Lang;
 import fr.danakube.danacobblegen.Files.Setting;
 import fr.danakube.danacobblegen.Managers.*;
 
@@ -175,7 +173,7 @@ public class BlockEvents implements Listener{
 	public void onBlockPlace(BlockPlaceEvent e) {
 		if(isWorldDisabled(e.getBlock().getWorld())) return;
 		if(!Setting.AUTOMATION_PISTONS.getBoolean()) return;
-		if(e.getBlock().getType() != XMaterial.PISTON.parseMaterial()) return;
+		if(e.getBlock().getType() != Material.PISTON) return;
 		Player p = e.getPlayer();
 		if(!p.isOnline()) return;
 		UUID uuid = p.getUniqueId();

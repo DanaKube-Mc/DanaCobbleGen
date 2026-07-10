@@ -2,8 +2,6 @@ package fr.danakube.danacobblegen.Files;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import fr.danakube.danacobblegen.CustomCobbleGen;
-import fr.danakube.danacobblegen.Managers.EconomyManager;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -196,7 +194,6 @@ public enum Lang {
     private final String path;
     private final String def;
     private static YamlConfiguration LANG;
-    private static final CustomCobbleGen plugin = CustomCobbleGen.getInstance();
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacyAmpersand();
@@ -213,18 +210,30 @@ public enum Lang {
  
     public static String color(String s) {
         if (s == null) return null;
-        Component component;
+        return LEGACY_SECTION_SERIALIZER.serialize(component(s));
+    }
+
+    public static Component component(String s) {
+        if (s == null) return Component.empty();
         if (s.contains("<")) {
             try {
-                component = MINI_MESSAGE.deserialize(s);
+                return MINI_MESSAGE.deserialize(s);
             } catch (Exception e) {
                 // Fall back to legacy if minimessage fails to parse
-                component = LEGACY_SERIALIZER.deserialize(s);
+                return LEGACY_SERIALIZER.deserialize(s);
             }
         } else {
-            component = LEGACY_SERIALIZER.deserialize(s);
+            return LEGACY_SERIALIZER.deserialize(s);
         }
-        return LEGACY_SECTION_SERIALIZER.serialize(component);
+    }
+
+    public static List<Component> componentList(List<String> list) {
+        if (list == null) return Collections.emptyList();
+        List<Component> components = new ArrayList<>();
+        for (String s : list) {
+            components.add(component(s));
+        }
+        return components;
     }
     
     @Override

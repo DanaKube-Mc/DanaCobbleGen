@@ -159,47 +159,49 @@ public class DynamicGeneratorManager {
 		}
 
 		PlayerData data = plugin.getPlayerDatabase().getPlayerData(uuid);
-        if (data == null) {
-            return new HashMap<>(defaultRatesByMode.getOrDefault(modeId, new HashMap<>()));
-        }
+		Map<Material, Double> defaultRates = defaultRatesByMode.getOrDefault(modeId, new HashMap<>());
+		if (data == null) {
+			return new HashMap<>(defaultRates);
+		}
 
-        Map<Material, Double> rates = new HashMap<>(defaultRatesByMode.getOrDefault(modeId, new HashMap<>()));
-        Map<String, Integer> playerOres = data.getOresForMode(modeId);
-        Map<String, DynamicOre> modeOres = dynamicOresByMode.getOrDefault(modeId, new HashMap<>());
-        
-        Material bufferMaterial = bufferMaterialByMode.get(modeId);
-        double totalAdded = 0;
+		Map<Material, Double> rates = new HashMap<>(defaultRates);
+		Map<String, Integer> playerOres = data.getOresForMode(modeId);
+		Map<String, DynamicOre> modeOres = dynamicOresByMode.getOrDefault(modeId, new HashMap<>());
+		
+		Material bufferMaterial = bufferMaterialByMode.get(modeId);
+		double totalAdded = 0;
 
-        for (Map.Entry<String, Integer> entry : playerOres.entrySet()) {
-            String oreId = entry.getKey();
-            int level = entry.getValue();
-            if (level >= 0) {
-                DynamicOre dOre = modeOres.get(oreId);
-                if (dOre != null) {
-                    double percentage = dOre.getStartPercentage();
-                    if (level > 0) {
-                        OreUpgrade upgrade = dOre.getUpgrade(level);
-                        if (upgrade != null) {
-                            percentage = upgrade.getPercentage();
-                        }
-                    }
-                    Material m = Material.matchMaterial(oreId.toUpperCase());
-                    if (m != null) {
-                        rates.put(m, percentage);
-                        totalAdded += percentage;
-                    }
-                }
-            }
-        }
+		for (Map.Entry<String, Integer> entry : playerOres.entrySet()) {
+			String oreId = entry.getKey();
+			int level = entry.getValue();
+			if (level >= 0) {
+				DynamicOre dOre = modeOres.get(oreId);
+				if (dOre != null) {
+					double percentage = dOre.getStartPercentage();
+					if (level > 0) {
+						OreUpgrade upgrade = dOre.getUpgrade(level);
+						if (upgrade != null) {
+							percentage = upgrade.getPercentage();
+						}
+					}
+					Material m = Material.matchMaterial(oreId.toUpperCase());
+					if (m != null) {
+						double defaultPercentage = defaultRates.getOrDefault(m, 0.0);
+						rates.put(m, percentage);
+						totalAdded += (percentage - defaultPercentage);
+					}
+				}
+			}
+		}
 
-        if (bufferMaterial != null && rates.containsKey(bufferMaterial)) {
-            double currentBuffer = rates.get(bufferMaterial);
-            double newBuffer = currentBuffer - totalAdded;
-            if (newBuffer < Setting.DYNAMIC_GENERATOR_MIN_BUFFER.getDouble()) {
-                newBuffer = Setting.DYNAMIC_GENERATOR_MIN_BUFFER.getDouble();
-            }
-            rates.put(bufferMaterial, newBuffer);
-        }
+		if (bufferMaterial != null) {
+			double currentBuffer = rates.getOrDefault(bufferMaterial, 0.0);
+			double newBuffer = currentBuffer - totalAdded;
+			if (newBuffer < Setting.DYNAMIC_GENERATOR_MIN_BUFFER.getDouble()) {
+				newBuffer = Setting.DYNAMIC_GENERATOR_MIN_BUFFER.getDouble();
+			}
+			rates.put(bufferMaterial, newBuffer);
+		}
 		return rates;
 	}
 
@@ -209,15 +211,28 @@ public class DynamicGeneratorManager {
     }
 
 	private Material getRandomFromRates(Map<Material, Double> rates) {
-        if (rates.isEmpty()) return Material.COBBLESTONE;
-		double r = Math.random() * 100;
-		double prev = 0;
-		for (Material m : rates.keySet()) {
-			double chance = rates.get(m) + prev;
-			if (r > prev && r <= chance) return m;
-			prev = chance;
+		if (rates == null || rates.isEmpty()) return Material.COBBLESTONE;
+		
+		double totalChance = 0;
+		for (double chance : rates.values()) {
+			if (chance > 0) {
+				totalChance += chance;
+			}
 		}
-		// If total rates < 100, might not return a material, so fallback
+		
+		if (totalChance <= 0) return rates.keySet().iterator().next();
+		
+		double r = Math.random() * totalChance;
+		double cumulative = 0;
+		for (Map.Entry<Material, Double> entry : rates.entrySet()) {
+			double chance = entry.getValue();
+			if (chance <= 0) continue;
+			cumulative += chance;
+			if (r < cumulative) {
+				return entry.getKey();
+			}
+		}
+		
 		return rates.keySet().iterator().next();
 	}
 

@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen.databases;
 
-import com.cryptomorin.xseries.XMaterial;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import fr.danakube.danacobblegen.Files.Setting;
@@ -11,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.Material;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -294,7 +294,7 @@ public class MySQLPlayerDatabase extends PlayerDatabase {
 				continue;
 			}
 			
-			else if(loc.getWorld().getBlockAt(loc).getType()!= XMaterial.PISTON.parseMaterial()) continue;
+			else if(loc.getWorld().getBlockAt(loc).getType() != Material.PISTON) continue;
 			blockManager.getKnownGenPistons().remove(loc);
 			GenPiston piston = new GenPiston(loc, uuid);
 			piston.setHasBeenUsed(true);
