@@ -1,8 +1,8 @@
 package fr.danakube.danacobblegen.Utils;
 
-import com.cryptomorin.xseries.XMaterial;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Material;
+import fr.danakube.danacobblegen.Files.Lang;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -153,17 +153,16 @@ public class ItemLib {
 		}
 		im = is.getItemMeta();
 		if(displayName != null){
-			im.setDisplayName(displayName);
+			im.displayName(Lang.component(displayName));
 		}
 		if(lore != null){
-			im.setLore(lore);
+			im.lore(Lang.componentList(lore));
 		}
 		is.setItemMeta(im);
 		is = this.setDamage(is);
 		return is;
 	}
 
-	@SuppressWarnings("deprecation")
 	public ItemStack setDamage(ItemStack is) {
 		Damageable damageMeta = (Damageable) im;
 		damageMeta.setDamage(damagevalue);

@@ -3,16 +3,16 @@ package fr.danakube.danacobblegen.Files.updaters;
 import fr.danakube.danacobblegen.CustomCobbleGen;
 import fr.danakube.danacobblegen.Files.Files;
 import fr.danakube.danacobblegen.Files.Lang;
-import org.bukkit.plugin.PluginDescriptionFile;
+import io.papermc.paper.plugin.configuration.PluginMeta;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class LangFileUpdater {
 	public LangFileUpdater(CustomCobbleGen plugin){
-		PluginDescriptionFile pluginYml = plugin.getDescription();
+		PluginMeta pluginMeta = plugin.getPluginMeta();
 		Files lang = plugin.lang;
-		lang.options().header(pluginYml.getName() + "! Version: " + pluginYml.getVersion() + 
-				" By Phil14052");
+		lang.options().setHeader(List.of(pluginMeta.getName() + "! Version: " + pluginMeta.getVersion() + " By Phil14052"));
 		for(Lang s : Lang.values()){
 			if(s.getDefault().startsWith("ARRAYLIST: ")){
 				String def = s.getDefault();

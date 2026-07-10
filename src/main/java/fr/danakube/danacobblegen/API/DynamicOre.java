@@ -1,6 +1,5 @@
 package fr.danakube.danacobblegen.API;
 
-import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import fr.danakube.danacobblegen.Requirements.Requirement;
 import java.util.List;

@@ -1,9 +1,9 @@
 package fr.danakube.danacobblegen.databases;
 
 import fr.danakube.danacobblegen.Utils.StringUtils;
+import io.papermc.paper.plugin.configuration.PluginMeta;
 import fr.danakube.danacobblegen.Utils.Response;
 import fr.danakube.danacobblegen.Files.Setting;
-import com.cryptomorin.xseries.XMaterial;
 import fr.danakube.danacobblegen.Managers.GenPiston;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,7 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.Material;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +39,9 @@ public class YamlPlayerDatabase extends PlayerDatabase {
         playerConfig = null;
         playerConfigFile = null;
 
-        PluginDescriptionFile pluginYml = plugin.getDescription();
+        PluginMeta pluginMeta = plugin.getPluginMeta();
         List<String> header = Arrays.asList(
-                String.format("%s! Version: %s - By Phil14052", pluginYml.getName(), pluginYml.getVersion()),
+                String.format("%s! Version: %s - By Phil14052", pluginMeta.getName(), pluginMeta.getVersion()),
                 "IMPORTANT: ONLY EDIT THIS IF YOU KNOW WHAT YOU ARE DOING!!"
         );
         try{
@@ -223,7 +223,7 @@ public class YamlPlayerDatabase extends PlayerDatabase {
                 && generatedPistons.length > 0) {
             List<String> locations = new ArrayList<>();
             for (GenPiston piston : generatedPistons) {
-                if (piston == null || piston.getLoc() == null || !piston.hasBeenUsed() || !piston.getLoc().getBlock().getType().equals(XMaterial.PISTON.parseMaterial()))
+                if (piston == null || piston.getLoc() == null || !piston.hasBeenUsed() || !piston.getLoc().getBlock().getType().equals(Material.PISTON))
                     continue;
 
                 String serializedLoc = StringUtils.serializeLoc(piston.getLoc());
@@ -250,7 +250,7 @@ public class YamlPlayerDatabase extends PlayerDatabase {
                 plugin.error("Unknown world in players.yml under UUID: " + uuid + ".pistons: " + stringLoc);
                 continue;
             }
-            if (loc.getWorld().getBlockAt(loc).getType() != XMaterial.PISTON.parseMaterial()) continue;
+            if (loc.getWorld().getBlockAt(loc).getType() != Material.PISTON) continue;
             blockManager.getKnownGenPistons().remove(loc);
             GenPiston piston = new GenPiston(loc, uuid);
             piston.setHasBeenUsed(true);

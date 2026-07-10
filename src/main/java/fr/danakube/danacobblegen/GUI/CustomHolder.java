@@ -1,6 +1,7 @@
 package fr.danakube.danacobblegen.GUI;
 
 import org.bukkit.Bukkit;
+import fr.danakube.danacobblegen.Files.Lang;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 
@@ -30,7 +31,7 @@ public class CustomHolder implements InventoryHolder{
 	
 	@Override
 	public Inventory getInventory() {
-		Inventory inventory = Bukkit.createInventory(this, this.size, this.title);
+		Inventory inventory = Bukkit.createInventory(this, this.size, Lang.component(this.title));
         
         for (Entry<Integer, Icon> entry : this.icons.entrySet()) {
         	if(entry.getKey() > this.size) continue;

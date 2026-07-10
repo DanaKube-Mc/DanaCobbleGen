@@ -30,7 +30,7 @@ public class TierPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public String getAuthor(){
-        return plugin.getDescription().getAuthors().toString();
+        return plugin.getPluginMeta().getAuthors().toString();
     }
 
     @Override
@@ -40,7 +40,7 @@ public class TierPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public String getVersion(){
-        return plugin.getDescription().getVersion();
+        return plugin.getPluginMeta().getVersion();
     }
 
     @Override

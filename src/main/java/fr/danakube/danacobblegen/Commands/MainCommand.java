@@ -12,7 +12,6 @@ import fr.danakube.danacobblegen.Utils.pastebin.FileUploader;
 import fr.danakube.danacobblegen.databases.MySQLPlayerDatabase;
 import fr.danakube.danacobblegen.databases.PlayerDatabase;
 import fr.danakube.danacobblegen.databases.YamlPlayerDatabase;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -50,7 +49,7 @@ public class MainCommand implements CommandExecutor{
 			sendHelp(sender, label);
 			return true;
 		}else if(args[0].equalsIgnoreCase("v")){
-			sender.sendMessage("CCG Version: " + plugin.getDescription().getVersion());
+			sender.sendMessage("CCG Version: " + plugin.getPluginMeta().getVersion());
 		}else if(args[0].equalsIgnoreCase("admin")){
 			if(!pm.hasPermission(sender, "customcobblegen.admin", true)) return false;
 			String adminUsage = Lang.PREFIX + Lang.ADMIN_USAGE.toString().replaceAll("%command%", label);
@@ -170,8 +169,15 @@ public class MainCommand implements CommandExecutor{
 						return true;
 					}
 					sender.sendMessage(Lang.DATABASE_MIGRATE_STARTING.toString());
+					if(fromDatabase.isConnectionClosed()){
+						sender.sendMessage(Lang.DATABASE_MIGRATE_ESTABLISHING_CONNECTION.toString(fromType));
+						Response<String> response = fromDatabase.establishConnection();
+						if(response.isError()){
+							sender.sendMessage(Lang.color("&c" + response.getResult()));
+							return true;
+						}
+					}
 					if(fromDatabase.getAllPlayerData().isEmpty()){
-						//TODO CHECK IF CONNECTION IS ESTABLISHED
 						sender.sendMessage(Lang.DATABASE_MIGRATE_LOADING_START.toString(fromType));
 						fromDatabase.loadEverythingFromDatabase();
 						sender.sendMessage(Lang.DATABASE_MIGRATE_LOADING_DONE.toString(fromType));
